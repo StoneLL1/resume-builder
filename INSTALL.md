@@ -1,6 +1,6 @@
 # Install resume-builder
 
-resume-builder 是一个 **agent 无关**的 skill：整个仓库根目录就是 skill 文件夹本身（`SKILL.md` 在根目录），用的是标准的 AgentSkills `SKILL.md` 格式。任何能读 skill 的 agent 都能跑它。
+resume-builder 不挑 agent——Claude Code、Codex、OpenClaw、Hermes 都能用。整个仓库根目录就是 skill 文件夹本身（`SKILL.md` 在根目录），用的是标准的 AgentSkills `SKILL.md` 格式。任何能读 skill 的 agent 都能加载它。
 
 下面这套流程你不用手动照着敲——把文末那句 "fetch and follow" 丢给你的 agent，它自己拉这份文档、按里面的步骤装好。
 

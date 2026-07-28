@@ -11,9 +11,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai/code)
 [![AgentSkills](https://img.shields.io/badge/AgentSkills-Standard-green)](https://agentskills.io)
-[![Multi-Agent](https://img.shields.io/badge/Runs%20on-Codex%20%7C%20OpenClaw%20%7C%20Hermes%20%7C%20Claude-22a7cc)](#哪个-agent-都能跑)
+[![Multi-Agent](https://img.shields.io/badge/Runs%20on-Codex%20%7C%20OpenClaw%20%7C%20Hermes%20%7C%20Claude-22a7cc)](#哪个-agent-都能用)
 
 </div>
+
+> 配套的写作方法论不是模型拍脑袋编的——蒸馏自小红书**近百篇高赞简历经验帖**，全是真人投递、面试、复盘出来的干货：量化怎么估才不露馅、STAR 怎么落到字面上、哪些词 HR 看一眼就划走。
 
 ---
 
@@ -21,7 +23,7 @@
 
 是你明明有一堆经历，却卡在一堆更烦的问题上：这条到底写不写？那个数字我记不清了，估一个会不会被发现？我根本不是这个专业的，怎么写才不会被 HR 一秒划掉？大部分简历工具只管给你套个模板，剩下这些真正费脑子的事，全丢给你自己。
 
-`resume-builder` 是一个 **agent 无关**的中文简历 skill——Claude Code、Codex、OpenClaw、Hermes 都能跑。它不替你编故事，也不塞你一个花哨模板了事。它把"做一份简历"拆成九步，从选模板一直带到出 PDF。但它真正跟别的不一样的地方，就一点。
+`resume-builder` 是一个**哪个 agent 都能用**的中文简历 skill——Claude Code、Codex、OpenClaw、Hermes 都行。它不替你编故事，也不塞你一个花哨模板了事。它把"做一份简历"拆成九步，从选模板一直带到出 PDF。但它真正跟别的不一样的地方，就一点。
 
 **它死活不肯编。**
 
@@ -55,17 +57,13 @@
 
 但这里有条硬线：**重包装 ≠ 编造**。它只用你确认过的事实重新组织措辞，绝不凭空给你加戏。
 
-### 写作的底气：近百篇小红书实战经验
-
-规则好定，难的是"到底怎么把一条流水账写成 HR 愿意看完的句子"。这部分它没靠拍脑袋——配套的 `writing-guide.md` 蒸馏自小红书上近百篇高赞的简历经验帖，全是真人投递、真人面试、真人复盘出来的干货：量化怎么估、STAR 怎么落到字面上、哪些词 HR 看一眼就烦、转行的人怎么把旧经历翻译成新语言。这不是哪个模型生成的泛泛而谈，是一堆踩过坑的人总结的。
-
 ### 一页纸优先
 
 求职、比赛简历默认压成一页。不是信条，是现实：HR 一份简历看大概三十秒，信息密度比信息量重要。一页之内把最相关的卖点全摆出来，比写满两页更难，也更有用。
 
-### 哪个 agent 都能跑
+### 哪个 agent 都能用
 
-它不绑死在 Claude 上。skill 用的是标准的 AgentSkills `SKILL.md` 格式，任何能读 skill 的 agent 都能加载——目前实测 **Claude Code、Codex、OpenClaw、Hermes** 都能跑，原理上其它符合标准的 runner 也行。安装不挑 agent：把一句"fetch and follow"丢给你的 agent，它自己拉 `INSTALL.md`、按里面的步骤装好。具体见下面[安装](#安装)。
+它不绑死在 Claude 上。skill 用的是标准的 AgentSkills `SKILL.md` 格式，任何能读 skill 的 agent 都能加载——目前实测 **Claude Code、Codex、OpenClaw、Hermes** 都能用，原理上其它符合标准的 runner 也行。安装也不挑 agent：把一句"fetch and follow"丢给你的 agent，它自己拉 `INSTALL.md`、按里面的步骤装好。具体见下面[安装](#安装)。
 
 ---
 
@@ -98,7 +96,7 @@
 
 ## 安装
 
-agent 无关，任选其一。
+不挑 agent，任选其一。
 
 **方法一（推荐，任何 agent 通用）：** 把下面这段原样粘给 Claude Code / Codex / OpenClaw / Hermes，它自己拉取 `INSTALL.md` 并按里面的步骤装好：
 
@@ -163,16 +161,6 @@ skill 主体尽量保持精简，重的东西拆进了 `references/`，需要时
 
 - **`writing-guide.md`** —— 蒸馏自小红书近百篇高赞简历经验帖。涵盖撰写公式（量化铁律、STAR、场景化五步法、三要素）、结构与排序、技术岗 / 三无大学生 / 转行 / 运营 / 英文简历的分场景写法、JD 关键词匹配、排版红线、投递规范、交付前的检查清单。
 - **`compile-guide.md`** —— XeLaTeX 工具链、Windows / macOS / Linux 三套中文字体方案、单页排版的边距与间距、预览渲染命令、常见报错排查。
-
----
-
-## 常见坑
-
-- 终端报 Unicode / GBK 错 —— 输出套一层 UTF-8。
-- 中文不显示 —— 确认 `\usepackage{xeCJK}` 加上系统字体，且引擎是 xelatex，不是 pdflatex。
-- macOS / Linux 报 `Cannot find font SimSun` —— SimSun 是 Windows 专有，换本地方案（macOS：Songti SC / Heiti SC；Linux：装 Noto CJK）。
-- fontawesome 图标变方框 —— `fonts/fontawesome` 和 `fontawesome.sty` 得在同一目录，复制模板时别忘了带上。
-- 超过一页 —— 先收紧间距和边距，再砍最不相关的经历，**别缩字号**。
 
 ---
 

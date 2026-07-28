@@ -1,0 +1,13 @@
+# LaTeX 编译中间产物
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+
+# 系统垃圾
+.DS_Store
+Thumbs.db

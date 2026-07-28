@@ -1,0 +1,88 @@
+% !TEX program = xelatex
+% 【脱敏匿名示例】供 resume-builder skill 参考 —— 所有个人数据均为占位符，无真实信息。
+% 本示例严格遵循 references/writing-guide.md：四样基本信息、教育→实习→项目→技能 结构、
+% 量化铁律、STAR/三要素公式、关键词与数据加粗、动词开头。
+% 编译：把本文件放入含模板依赖（resume.cls / fonts / fontawesome）的文件夹后执行 xelatex resume-example.tex
+
+\documentclass{resume}
+\usepackage{xeCJK}
+% Windows 系统自带中文字体，开箱可编译（无需 Adobe 字体）
+\setCJKmainfont[BoldFont=SimHei, ItalicFont=KaiTi]{SimSun}
+\setCJKsansfont{SimHei}
+\setCJKmonofont{FangSong}
+
+% 收紧页边距与标题间距，确保单页
+\geometry{top=0.5in, bottom=0.4in}
+\titlespacing*{\section}{0cm}{*1.0}{*1.0}
+\titlespacing*{\subsection}{0cm}{*1.0}{*0.5}
+
+\begin{document}
+\pagenumbering{gobble} % 不显示页码
+
+\name{张三}
+
+% 基本信息「只写四样」：姓名(\name) + 电话 + 邮箱 + 求职岗位；不放住址 / 婚姻 / 身份证。
+% GitHub / 博客等加分链接放「其他」区，不挤进头部。
+\basicInfo{
+  \phone{(+86) 138-xxxx-xxxx} \textperiodcentered\
+  \email{example@mail.com} \textperiodcentered\
+  求职意向：后端开发工程师
+}
+\vspace{0.5ex}
+
+% ========== 教育背景（倒序） ==========
+\section{\faGraduationCap\ 教育背景}
+\datedsubsection{\textbf{某某大学}（985 / 211） 计算机学院 · 软件工程（本科）}{20XX.09 -- 20XX.06}
+% 可补充真实项：GPA X.X/4.0、专业排名前 X%、核心课程（须真实，勿编造）
+
+% ========== 实习 / 工作经历（按目标取舍；有则排在项目前） ==========
+% \section{\faBriefcase\ 实习经历}
+% \datedsubsection{\textbf{xx 科技有限公司} · 部门}{20XX.0X -- 20XX.0X}
+% \role{岗位}{地点}
+% \begin{itemize}
+%   \item 动词开头 + 怎么做 + 量化结果（如 优化接口使响应时间降低 X\%）
+% \end{itemize}
+
+% ========== 项目经历（与目标最相关可提前；少而精 1–2 个） ==========
+\section{\faFlask\ 项目经历}
+
+\datedsubsection{\textbf{某某高并发服务 / 某某系统}}{个人项目}
+\role{技术栈：A / B / C}{独立开发}
+% 一句话讲清「做了什么 + 解决什么痛点 + 规模 / 效果」
+针对 XX 场景的 YY 痛点，独立设计并实现该系统，支撑 XX 量级请求。
+\begin{itemize}
+  \item \textbf{重构} XX 模块、引入 ZZ 方案，接口响应时间从 XX ms 降至 XX ms（\textbf{降低 X\%}）
+  \item 设计 YY 缓存策略，支撑\textbf{峰值 QPS XXXX}，命中率保持在 XX\% 以上
+  \item 成果收尾：上线服务 XX 用户 / 开源获 \textbf{XX star}（择一，量化结尾）
+\end{itemize}
+
+\datedsubsection{\textbf{另一段经历标题}}{20XX.0X -- 20XX.0X}
+\role{角色}{组织 / 合作方}
+\begin{itemize}
+  \item 动词开头 + 怎么做 + 结果（如 优化后吞吐\textbf{提升 X\%}、服务 X 个团队）
+  \item 第二条突出难点攻克或技术亮点
+\end{itemize}
+
+% ========== 专业技能（岗位强相关项；不熟的慎写，面试一问就露馅） ==========
+\section{\faCogs\ 专业技能}
+\begin{itemize}[parsep=0.5ex]
+  \item 编程语言：Python、Java、C++（按熟练度降序）
+  \item 框架与工具：Spring、MySQL、Git、Docker
+  \item 英语：大学英语六级（CET-6）XXX 分
+\end{itemize}
+
+% ========== 荣誉奖项 ==========
+\section{\faHeartO\ 荣誉奖项}
+\begin{itemize}[parsep=0.5ex]
+  \item xx 奖学金（院 / 校级，体现学习能力）
+  \item xx 比赛 x 等奖（参赛 XX 队 / 前 X\%）
+\end{itemize}
+
+% ========== 其他（加分链接：GitHub / 博客 / 力扣） ==========
+% \section{\faInfo\ 其他}
+% \begin{itemize}[parsep=0.5ex]
+%   \item GitHub：https://github.com/your-id
+%   \item 技术博客 / 力扣：...
+% \end{itemize}
+
+\end{document}

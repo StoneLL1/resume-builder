@@ -6,13 +6,22 @@
 
 <p align="center"><em>turn your chaos into career ✨</em></p>
 
+<div align="center">
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai/code)
+[![AgentSkills](https://img.shields.io/badge/AgentSkills-Standard-green)](https://agentskills.io)
+[![Multi-Agent](https://img.shields.io/badge/Runs%20on-Codex%20%7C%20OpenClaw%20%7C%20Hermes%20%7C%20Claude-22a7cc)](#哪个-agent-都能跑)
+
+</div>
+
 ---
 
 写简历最难的从来不是排版。
 
 是你明明有一堆经历，却卡在一堆更烦的问题上：这条到底写不写？那个数字我记不清了，估一个会不会被发现？我根本不是这个专业的，怎么写才不会被 HR 一秒划掉？大部分简历工具只管给你套个模板，剩下这些真正费脑子的事，全丢给你自己。
 
-`resume-builder` 是一个跑在 Claude Code 里的中文简历 skill。它不替你编故事，也不塞你一个花哨模板了事。它把"做一份简历"拆成九步，从选模板一直带到出 PDF。但它真正跟别的不一样的地方，就一点。
+`resume-builder` 是一个 **agent 无关**的中文简历 skill——Claude Code、Codex、OpenClaw、Hermes 都能跑。它不替你编故事，也不塞你一个花哨模板了事。它把"做一份简历"拆成九步，从选模板一直带到出 PDF。但它真正跟别的不一样的地方，就一点。
 
 **它死活不肯编。**
 
@@ -46,9 +55,17 @@
 
 但这里有条硬线：**重包装 ≠ 编造**。它只用你确认过的事实重新组织措辞，绝不凭空给你加戏。
 
+### 写作的底气：近百篇小红书实战经验
+
+规则好定，难的是"到底怎么把一条流水账写成 HR 愿意看完的句子"。这部分它没靠拍脑袋——配套的 `writing-guide.md` 蒸馏自小红书上近百篇高赞的简历经验帖，全是真人投递、真人面试、真人复盘出来的干货：量化怎么估、STAR 怎么落到字面上、哪些词 HR 看一眼就烦、转行的人怎么把旧经历翻译成新语言。这不是哪个模型生成的泛泛而谈，是一堆踩过坑的人总结的。
+
 ### 一页纸优先
 
 求职、比赛简历默认压成一页。不是信条，是现实：HR 一份简历看大概三十秒，信息密度比信息量重要。一页之内把最相关的卖点全摆出来，比写满两页更难，也更有用。
+
+### 哪个 agent 都能跑
+
+它不绑死在 Claude 上。skill 用的是标准的 AgentSkills `SKILL.md` 格式，任何能读 skill 的 agent 都能加载——目前实测 **Claude Code、Codex、OpenClaw、Hermes** 都能跑，原理上其它符合标准的 runner 也行。安装不挑 agent：把一句"fetch and follow"丢给你的 agent，它自己拉 `INSTALL.md`、按里面的步骤装好。具体见下面[安装](#安装)。
 
 ---
 
@@ -81,15 +98,24 @@
 
 ## 安装
 
-这是个 Claude skill。把它放进你项目的 `.claude/skills/` 下，或者用户级的 `~/.claude/skills/`：
+agent 无关，任选其一。
+
+**方法一（推荐，任何 agent 通用）：** 把下面这段原样粘给 Claude Code / Codex / OpenClaw / Hermes，它自己拉取 `INSTALL.md` 并按里面的步骤装好：
+
+```text
+Fetch and follow instructions from:
+https://raw.githubusercontent.com/StoneLL1/resume-builder/main/INSTALL.md
+```
+
+**方法二（手动 clone）：** 把仓库丢进你 agent 的 skill 目录。Claude Code 的目录是 `~/.claude/skills`（或项目 `.claude/skills/`），其它 agent 的目录见 `INSTALL.md` 里的对照表。
 
 ```bash
 git clone https://github.com/StoneLL1/resume-builder.git .claude/skills/resume-builder
 ```
 
-然后跟 Claude 说一句"帮我写简历"、"改简历"、"投 XX 岗位，要份简历"就行。它的触发词是：简历、resume、CV、投简历、改简历。
+装好之后跟 agent 说一句"帮我写简历"、"改简历"、"投 XX 岗位，要份简历"就行。触发词：简历、resume、CV、投简历、改简历。
 
-前提是你机器上得有 XeLaTeX（装个 TeX 发行版即可，TeX Live 或 MiKTeX 都行）。
+前提是机器上有 XeLaTeX（装个 TeX 发行版即可，TeX Live 或 MiKTeX 都行）。详细的分 agent 目录、PowerShell / POSIX 命令、验证步骤都在 `INSTALL.md` 里。
 
 ---
 
@@ -98,10 +124,11 @@ git clone https://github.com/StoneLL1/resume-builder.git .claude/skills/resume-b
 ```
 resume-builder/
 ├── SKILL.md                       # skill 主体：九步流程 + 全部规则
+├── INSTALL.md                     # 多 agent 安装（fetch-and-follow 入口）
 ├── README.md                      # 你正在看的这个
 ├── cover.png
 ├── references/
-│   ├── writing-guide.md           # 撰写方法论，蒸馏自 30 篇高赞简历经验
+│   ├── writing-guide.md           # 撰写方法论，蒸馏自近百篇小红书高赞经验帖
 │   └── compile-guide.md           # XeLaTeX 编译、字体、单页排版、排错
 └── example/
     └── resume-example.tex         # 一份脱敏的示例简历，照着抄结构
@@ -134,7 +161,7 @@ resume-builder/
 
 skill 主体尽量保持精简，重的东西拆进了 `references/`，需要时才加载：
 
-- **`writing-guide.md`** —— 撰写公式（量化铁律、STAR、场景化五步法、三要素）、结构与排序、技术岗 / 三无大学生 / 转行 / 运营 / 英文简历的分场景写法、JD 关键词匹配、排版红线、投递规范、交付前的检查清单。
+- **`writing-guide.md`** —— 蒸馏自小红书近百篇高赞简历经验帖。涵盖撰写公式（量化铁律、STAR、场景化五步法、三要素）、结构与排序、技术岗 / 三无大学生 / 转行 / 运营 / 英文简历的分场景写法、JD 关键词匹配、排版红线、投递规范、交付前的检查清单。
 - **`compile-guide.md`** —— XeLaTeX 工具链、Windows / macOS / Linux 三套中文字体方案、单页排版的边距与间距、预览渲染命令、常见报错排查。
 
 ---
@@ -162,7 +189,7 @@ skill 主体尽量保持精简，重的东西拆进了 `references/`，需要时
 
 ## 致谢
 
-模板来自开源社区，尤其 [billryan/resume](https://github.com/billryan/resume) 和 [dyweb/awesome-resume-for-chinese](https://github.com/dyweb/awesome-resume-for-chinese)。撰写方法论汇总自公开的高赞简历经验帖。封面那张手绘插画，是这套 skill 的脸面——"DELETE THE DEFAULT RESUME" 和 "CAFFEINE > TALENT"，大概就是它整个的脾气。
+模板来自开源社区，尤其 [billryan/resume](https://github.com/billryan/resume) 和 [dyweb/awesome-resume-for-chinese](https://github.com/dyweb/awesome-resume-for-chinese)。撰写方法论蒸馏自小红书上一批认真分享简历经验的原作者。封面那张手绘插画，是这套 skill 的脸面——"DELETE THE DEFAULT RESUME" 和 "CAFFEINE > TALENT"，大概就是它整个的脾气。
 
 ## License
 

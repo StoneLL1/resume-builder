@@ -1,0 +1,57 @@
+--- cv.typ
++++ upstream/layout.typ
+@@ -105,7 +105,7 @@
+ 
+     #set text(font: uservars.bodyfont, weight: "medium", size: uservars.fontsize * 1)
+     #pad(x: 0em)[
+-        #profiles.join([#sym.space.en #sym.diamond.filled #sym.space.en])
++        #if "contacts-display" in info.personal { info.personal.at("contacts-display").join([#sym.space.en #sym.diamond.filled #sym.space.en]) } else { profiles.join([#sym.space.en #sym.diamond.filled #sym.space.en]) }
+     ]
+ ]
+ 
+@@ -136,14 +136,14 @@
+                 if index != 0 {v(0.6em)}
+                 block(width: 100%, breakable: isbreakable, above: 0.6em)[
+                     // Parse ISO date strings into datetime objects
+-                    #let start = utils.strpdate(p.startDate)
+-                    #let end = utils.strpdate(p.endDate)
++                    #let start = if "date-display" in p { none } else { utils.strpdate(p.startDate) }
++                    #let end = if "date-display" in p { none } else { utils.strpdate(p.endDate) }
+                     // Line 2: Position and Date Range
+                     #text(style: "italic")[#p.position] #h(1fr)
+-                    #utils.daterange(start, end) \
++                    #if "date-display" in p { p.at("date-display") } else { utils.daterange(start, end) } \
+                     // Highlights or Description
+                     #for hi in p.highlights [
+-                        - #eval(hi, mode: "markup")
++                        - #hi
+                     ]
+                 ]
+                 index = index + 1
+@@ -212,7 +212,7 @@
+                 // Highlights or Description
+                 #if ("highlights" in org) and (org.highlights != none) {
+                     for hi in org.highlights [
+-                        - #eval(hi, mode: "markup")
++                        - #hi
+                     ]
+                 } else {}
+             ]
+@@ -239,7 +239,7 @@
+                 #text(style: "italic")[#project.affiliation]  #h(1fr) #utils.daterange(start, end) \
+                 // Summary or Description
+                 #for hi in project.highlights [
+-                    - #eval(hi, mode: "markup")
++                    - #hi
+                 ]
+             ]
+         }
+@@ -265,7 +265,7 @@
+                 // Summary or Description
+                 #if ("highlights" in award) and (award.highlights != none) {
+                     for hi in award.highlights [
+-                        - #eval(hi, mode: "markup")
++                        - #hi
+                     ]
+                 } else {}
+             ]

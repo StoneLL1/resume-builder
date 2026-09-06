@@ -1,0 +1,10 @@
+--- template.typ
++++ upstream/layout.typ
+@@ -18,7 +18,6 @@
+   italic-font-list: italic-font-list,
+ ) = {
+   // 标题
+-  set document(title: name)
+   // 页边距设定
+   set page(
+     paper: "a4",

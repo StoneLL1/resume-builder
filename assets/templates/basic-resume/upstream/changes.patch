@@ -1,0 +1,27 @@
+--- src/resume.typ
++++ upstream/layout.typ
+@@ -2,6 +2,7 @@
+ 
+ #let resume(
+   author: "",
++  contacts-display: none,
+   author-position: left,
+   personal-info-position: left,
+   pronouns: "",
+@@ -22,7 +23,6 @@
+ ) = {
+ 
+   // Sets document metadata
+-  set document(author: author, title: author)
+ 
+   // Document-wide formatting, including font and margins
+   set text(
+@@ -98,7 +98,7 @@
+           contact-item(personal-site, link-type: "https://"),
+           contact-item(orcid, prefix: [#orcid-icon(color: rgb("#AECD54"))orcid.org/], link-type: "https://orcid.org/"),
+         )
+-        items.filter(x => x != none).join("  |  ")
++        if contacts-display != none { contacts-display.join("  |  ") } else { items.filter(x => x != none).join("  |  ") }
+       }
+     ],
+   )

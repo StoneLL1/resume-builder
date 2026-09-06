@@ -1,0 +1,10 @@
+--- lib.typ
++++ upstream/layout.typ
+@@ -27,7 +27,6 @@
+ // Go ahead and customize it to your liking!
+ #let project(title: "", author: (), times: none, contacts: (), body) = {
+   // Set the document's basic properties.
+-  set document(author: author.name, title: title)
+   set page(
+     /// Margins of the page
+   margin: (

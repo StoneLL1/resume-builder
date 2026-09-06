@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "id": "habaneraa",
+  "name": "Habaneraa · 一页简历",
+  "description": "青绿色重点文字，左对齐抬头，可调节内容间距。",
+  "tags": [
+    "中文",
+    "单栏",
+    "上游原版"
+  ],
+  "internal": false,
+  "gallery_language": "zh",
+  "gallery_order": 7,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/habaneraa/typst-resume-one-page",
+    "commit": "98aea62a4f37d9503247b4935087e26c84109a84",
+    "path": "src/lib.typ"
+  },
+  "implementation": "upstream-adapter",
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "zh"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "zh": {
+      "latin": [
+        "New Computer Modern"
+      ],
+      "cjk": [
+        "Noto Sans CJK SC",
+        "Noto Serif CJK SC",
+        "Source Han Sans SC",
+        "Source Han Serif SC"
+      ]
+    }
+  },
+  "preview": "preview-upstream.png",
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/habaneraa/typst-resume-one-page",
+    "commit": "98aea62a4f37d9503247b4935087e26c84109a84",
+    "path": "thumbnail.png",
+    "source_file": "preview-upstream.png",
+    "source_sha256": "c719be70d99a6a6d774814570a3577ea45f77f349668d3b01cffebbe74ec4b42",
+    "file": "preview-upstream.png",
+    "sha256": "c719be70d99a6a6d774814570a3577ea45f77f349668d3b01cffebbe74ec4b42"
+  },
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "src/lib.typ",
+      "sha256": "7880c2971b8f08914ea2ad44c774eb322d4a898ecd57ba6a77480b25be30beb5"
+    }
+  ],
+  "font_policy": "upstream-original"
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "id": "basic-resume",
+  "name": "Basic Resume",
+  "description": "蓝色姓名和小型大写标题、黑色分节线，采用原版 New Computer Modern 字体。",
+  "tags": [
+    "英文",
+    "蓝色",
+    "单栏",
+    "衬线"
+  ],
+  "internal": false,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/stuxf/basic-typst-resume-template",
+    "commit": "e7b02372015a39de3f486f833cb29458e2aed6b8",
+    "path": "src/resume.typ"
+  },
+  "license": {
+    "name": "Unlicense",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "en"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "en": {
+      "latin": [
+        "New Computer Modern"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.png",
+  "gallery_language": "en",
+  "gallery_order": 5,
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/stuxf/basic-typst-resume-template",
+    "commit": "e7b02372015a39de3f486f833cb29458e2aed6b8",
+    "path": "example-resume.png",
+    "source_file": "preview-upstream.png",
+    "source_sha256": "7af84c0e025e3f169fe689ba932bf55a106dac729ddfe5b377aed2f3f1fb2d19",
+    "file": "preview-upstream.png",
+    "sha256": "7af84c0e025e3f169fe689ba932bf55a106dac729ddfe5b377aed2f3f1fb2d19"
+  },
+  "color_mode": "color",
+  "implementation": "upstream-adapter",
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "src/resume.typ",
+      "sha256": "1ba324c8d62ef99ac55392426c0f81834443536addc20e5e7bc475e321e9f796"
+    },
+    {
+      "path": "upstream/original/example.typ",
+      "upstream_path": "template/main.typ",
+      "sha256": "2ddf8cd77bd24d0beaeb8836ea14239c1bdb2b4e1fcb78d803b358c1e6e40ea9"
+    }
+  ],
+  "font_policy": "upstream-original"
+}

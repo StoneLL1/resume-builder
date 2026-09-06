@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "id": "miku",
+  "name": "Miku CV",
+  "description": "学术风格、衬线正文与图标分节，采用原版单栏布局。",
+  "tags": [
+    "中文",
+    "单栏",
+    "上游原版"
+  ],
+  "internal": false,
+  "gallery_language": "zh",
+  "gallery_order": 4,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/ice-kylin/typst-cv-miku",
+    "commit": "cca877aa3a86a77ecfb5f00521040cc493aec67f",
+    "path": "template.typ"
+  },
+  "implementation": "upstream-adapter",
+  "license": {
+    "name": "WTFPL",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "zh"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "zh": {
+      "latin": [
+        "KpRoman",
+        "KpSans",
+        "Segoe UI Emoji"
+      ],
+      "cjk": [
+        "Source Han Serif SC",
+        "Source Han Sans SC"
+      ]
+    }
+  },
+  "preview": "preview-upstream.webp",
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/ice-kylin/typst-cv-miku",
+    "commit": "cca877aa3a86a77ecfb5f00521040cc493aec67f",
+    "path": "assets/cv_1.webp",
+    "source_file": "preview-upstream.webp",
+    "source_sha256": "595bb3918cfddddbd6beed08bea669a29d95c098c06f296891f9db41e8ff9c4b",
+    "file": "preview-upstream.webp",
+    "sha256": "595bb3918cfddddbd6beed08bea669a29d95c098c06f296891f9db41e8ff9c4b",
+    "viewport": "right-half"
+  },
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "template.typ",
+      "sha256": "d4488f6a5dcb2e32bd3280335920133ea7af7eb00c8d7e4a1e648654e4811130"
+    }
+  ],
+  "font_policy": "upstream-original"
+}

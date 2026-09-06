@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "id": "resume-ng",
+  "name": "Resume NG",
+  "description": "居中姓名、黑白分节与右对齐日期，突出信息密度。",
+  "tags": [
+    "中文",
+    "单栏",
+    "上游原版"
+  ],
+  "internal": false,
+  "gallery_language": "zh",
+  "gallery_order": 3,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/fky2015/resume-ng-typst",
+    "commit": "bc2d5ce0299b4d2fe328bb24a9820caff8a6fc9f",
+    "path": "lib/lib.typ"
+  },
+  "implementation": "upstream-adapter",
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "zh"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "zh": {
+      "latin": [
+        "Noto Serif CJK SC"
+      ],
+      "cjk": [
+        "Noto Serif CJK SC"
+      ]
+    }
+  },
+  "preview": "preview-upstream.png",
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/fky2015/resume-ng-typst",
+    "commit": "bc2d5ce0299b4d2fe328bb24a9820caff8a6fc9f",
+    "path": "thumbnail.png",
+    "source_file": "preview-upstream.png",
+    "source_sha256": "1bb111fd9522c8474773859c013127cd78dbd013488e460d2c2931d963f08cbd",
+    "file": "preview-upstream.png",
+    "sha256": "1bb111fd9522c8474773859c013127cd78dbd013488e460d2c2931d963f08cbd"
+  },
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "lib/lib.typ",
+      "sha256": "3dd7cd492801cc44a49644e06fed813a210134db5a04e0f210ab2aafe27b9816"
+    }
+  ],
+  "font_policy": "upstream-original"
+}

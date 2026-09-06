@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>简历编辑 · Resume Builder</title>
+<link rel="stylesheet" href="/assets/app.css" />
+</head>
+<body>
+<div class="editor-shell">
+
+  <!-- ═══ 顶部工具栏 ═══ -->
+  <div class="toolbar" role="toolbar" aria-label="简历操作">
+    <span class="brand"><span class="brand-mark">简</span>Resume Builder</span>
+
+    <span class="status-line" id="statusLine" title="保存与渲染状态">
+      <span class="st-dot"></span><span id="saveText">加载中…</span>
+      <span class="status-sep" aria-hidden="true">·</span>
+      <span class="num pagecount" id="pageText" title="当前模板下的实际页数">— 页</span>
+    </span>
+
+    <span class="spacer"></span>
+
+    <div class="tabs" role="tablist" aria-label="工作模式">
+      <button role="tab" aria-selected="true" class="active" type="button">编辑</button>
+      <button role="tab" aria-selected="false" type="button" onclick="location.href='/facts'">事实核对</button>
+    </div>
+
+    <div class="menu-wrap">
+      <button class="btn btn-secondary" id="exportBtn" aria-haspopup="menu" aria-expanded="false" type="button">
+        导出
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="menu" id="exportMenu" role="menu">
+        <button role="menuitem" data-menu="pdf" type="button" title="按 姓名-目标岗位-电话 命名，导出到项目目录">导出正式 PDF</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="doneBtn" type="button">完成</button>
+  </div>
+
+  <!-- ═══ 模板切换栏 ═══ -->
+  <div class="tplbar" aria-label="切换模板（换模板后 Agent 会重新排版检查）">
+    <span class="tplbar-label">模板</span>
+    <div style="display:flex;gap:var(--space-3);align-items:center" id="tplThumbs"></div>
+  </div>
+
+  <!-- ═══ 主区 ═══ -->
+  <div class="editor-main">
+    <div class="canvas-wrap" id="canvasWrap" aria-label="简历预览，点击文字块可就地编辑">
+      <div id="canvasEmpty" style="color:var(--muted);text-align:center;line-height:2">
+        等待渲染结果…<br />
+        <button class="btn btn-secondary" id="emptyRetry" style="margin-top:8px" type="button">重试渲染</button>
+      </div>
+    </div>
+
+    <button class="rail-toggle" id="railToggle" aria-label="折叠结构面板" aria-expanded="true" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <aside class="structure" id="structure" aria-label="简历结构">
+      <div class="structure-inner">
+        <div class="structure-head">
+          <h2>结构</h2>
+          <button class="btn-icon" id="closeStructure" aria-label="折叠面板" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+        </div>
+        <div class="structure-body" id="structureBody"><!-- JS 渲染 --></div>
+        <div class="structure-foot">
+          拖拽 = 同板块内排序（不支持跨板块）· 点击条目 = 在预览中定位 · 模板与措辞的大改动可回到对话让 Agent 处理
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script src="/assets/app.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   可视化编辑器（Batch 6）
+   - 画布：真实 Typst SVG（/api/preview/{n}）+ layout-map 热区。
+   - 点击热区 → 就地编辑 → PUT /api/resume → 服务端自动重渲染。
+   - 结构面板：经历/要点增删 + 同板块排序。
+   - 轮询 /api/events：Agent 外部改 JSON 自动刷新；阶段切换自动跳页。
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 状态 ── */
+let resume = null;            // 服务端最新 resume.json（编辑时克隆后 PUT）
+let layoutMap = null;         // layout-map.json
+let templates = [];           // 模板条（含 internal，当前模板可能是内部参考模板）
+let renderVersion = 0;        // 预览 URL 缓戳
+let savedAt = null;           // 最近一次保存完成时间戳
+let pendingSave = false;      // PUT 已提交、等待 rendered/render_failed
+let busy = false;             // 保存请求在途
+let entryOpen = new Set();    // 结构面板中展开 bullets 的 entry id
+
+const PAGE_DISPLAY_W = 660;   // 画布显示宽（px）；热区坐标 = pt × scale
+
+/* ═══════════ 字段索引：热区 ID → 读写器 ═══════════ */
+function fieldLabel(id) {
+  if (id === 'basics.name') return '姓名';
+  if (id === 'basics.name-en') return '英文姓名';
+  if (id === 'basics.headline') return '头衔';
+  for (const s of resume.sections) {
+    if (s.id === id) return '板块标题 · ' + s.title;
+    for (const e of s.entries) {
+      if (e.id === id) return '经历（整条）';
+      if (id === e.id + '.title') return '经历标题';
+      if (id === e.id + '.subtitle') return '经历副标题';
+      if (id === e.id + '.date') return '日期';
+      if (id === e.id + '.location') return '地点';
+      for (const b of e.bullets) if (b.id === id) return '要点';
+    }
+  }
+  for (const c of (resume.basics.contacts || [])) if (c.id === id) return '联系方式 · ' + (c.label || c.type);
+  return id;
+}
+
+/* 返回 {get(), set(v)}：set 直接改 resume 并返回 true；结构字段返回 null（不弹编辑器） */
+function fieldAccess(id) {
+  const b = resume.basics;
+  if (id === 'basics.name') return { get: () => b.name || '', set: v => { b.name = v; } };
+  if (id === 'basics.name-en') return { get: () => b.name_en || '', set: v => { b.name_en = v; } };
+  if (id === 'basics.headline') return { get: () => b.headline || '', set: v => { b.headline = v; } };
+  for (const c of (b.contacts || [])) {
+    if (c.id === id) return { get: () => c.value || '', set: v => { c.value = v; } };
+  }
+  for (const s of resume.sections) {
+    if (s.id === id) return { get: () => s.title || '', set: v => { s.title = v; } };
+    for (const e of s.entries) {
+      for (const k of ['title', 'subtitle', 'date', 'location']) {
+        if (id === e.id + '.' + k) return { get: () => e[k] || '', set: v => { e[k] = v; } };
+      }
+      for (const bu of e.bullets) {
+        if (bu.id === id) return { get: () => bu.text || '', set: v => { bu.text = v; } };
+      }
+    }
+  }
+  return null;
+}
+
+/* id 所在的 entry（不含 .xxx 后缀的条目级热区 / 子字段都算） */
+function entryOf(id) {
+  for (const s of resume.sections) {
+    for (const e of s.entries) {
+      if (e.id === id || id.startsWith(e.id + '.') || id.startsWith(e.id + '-b')) return e;
+    }
+  }
+  return null;
+}
+
+/* ═══════════ 保存与渲染状态 ═══════════ */
+function setStatus(kind, text) {
+  const line = $('#statusLine');
+  line.className = 'status-line ' + kind;
+  $('#saveText').textContent = text;
+  if (kind === 'saved') savedAt = Date.now();
+}
+
+function refreshPageCount() {
+  const pages = layoutMap ? layoutMap.pages : 0;
+  const target = resume ? resume.meta.page_target : null;
+  const el = $('#pageText');
+  el.textContent = pages ? pages + ' 页' : '— 页';
+  el.classList.toggle('over', pages && target && pages > target);
+  el.title = (pages && target && pages > target)
+    ? `实际 ${pages} 页，超出目标 ${target} 页；建议回到对话让 Agent 精简`
+    : '当前模板下的实际页数';
+}
+
+/* 修改并保存：mutator 操作 resume 副本；返回 Promise */
+async function saveResume(mutator, { quiet = false } = {}) {
+  if (busy) { toast('上一个保存还在进行中，请稍候'); throw new Error('busy'); }
+  busy = true;
+  try {
+    mutator(resume);
+    setStatus('saving', '保存中…');
+    await api('/api/resume', { method: 'PUT', body: resume });
+    pendingSave = true;
+    setStatus('rendering', '已保存，渲染中…');
+    renderStructure();       // 面板立即反映结构变化
+  } catch (e) {
+    setStatus('idle', '保存失败');
+    toast('保存失败：' + e.message, 5000);
+    throw e;
+  } finally {
+    busy = false;
+  }
+}
+
+/* rendered / render_failed 事件 → 刷新画布 */
+async function onRenderDone(ok, data) {
+  const wasPending = pendingSave;
+  pendingSave = false;
+  await refreshCanvas();
+  if (ok) {
+    setStatus('saved', '已保存');
+  } else {
+    setStatus('failed', '渲染失败');
+    toast('渲染失败：' + (data && data.error ? String(data.error).split('\n')[0] : '未知错误') + '（可点“导出”旁重试或回到对话修复）', 6000);
+  }
+  if (wasPending && ok) toast('已更新');
+}
+
+/* ═══════════ 画布：SVG 页面 + 热区 ═══════════ */
+async function refreshCanvas() {
+  if (!resume) return;
+  try {
+    const [preview, map] = await Promise.all([
+      api('/api/preview'),
+      api('/api/layout-map'),
+    ]);
+    layoutMap = map;
+  } catch (e) {
+    layoutMap = null;
+    $('#canvasEmpty').classList.remove('hidden');
+    $('#canvasEmpty').firstChild.textContent = '还没有渲染产物：' + e.message + ' ';
+    refreshPageCount();
+    return;
+  }
+  renderVersion++;
+  const wrap = $('#canvasWrap');
+  $('#canvasEmpty').classList.add('hidden');
+  $$('.page-wrap', wrap).forEach(el => el.remove());
+
+  for (let p = 1; p <= layoutMap.pages; p++) {
+    const size = layoutMap.page_sizes[String(p)] || {};
+    const pageEl = document.createElement('div');
+    pageEl.className = 'page-wrap';
+    pageEl.dataset.page = p;
+
+    const img = document.createElement('img');
+    img.className = 'svgpage';
+    img.alt = '简历第 ' + p + ' 页';
+    img.src = `/api/preview/${p}?token=${encodeURIComponent(RB.token)}&v=${renderVersion}`;
+    pageEl.appendChild(img);
+
+    if (layoutMap.pages > 1) {
+      const label = document.createElement('span');
+      label.className = 'page-label';
+      label.textContent = '第 ' + p + ' / ' + layoutMap.pages + ' 页';
+      pageEl.appendChild(label);
+    }
+
+    const scale = PAGE_DISPLAY_W / (size.width || 595.28);
+    const fields = layoutMap.fields.filter(f => f.page === p);
+    /* entry 级热区垫底，行级字段在上：点文字命中小热区，点空白命中条目 */
+    for (const pass of [true, false]) {
+      for (const f of fields) {
+        if ((f.kind === 'entry') !== pass) continue;
+        const hot = document.createElement('div');
+        hot.className = 'hot k-' + f.kind;
+        hot.dataset.id = f.id;
+        hot.title = f.kind === 'entry' ? '整条经历：点击在右侧定位' : fieldLabel(f.id);
+        hot.style.cssText =
+          `left:${f.x * scale}px;top:${f.y * scale}px;width:${Math.max(f.width * scale, 14)}px;height:${Math.max(f.height * scale, 10)}px`;
+        hot.addEventListener('click', ev => { ev.stopPropagation(); onHotzoneClick(f, hot); });
+        pageEl.appendChild(hot);
+      }
+    }
+    wrap.appendChild(pageEl);
+  }
+  refreshPageCount();
+}
+
+function onHotzoneClick(f, hotEl) {
+  const access = fieldAccess(f.id);
+  if (f.kind !== 'entry' && access) {
+    openInlineEditor(f.id, access, hotEl);
+  } else {
+    /* entry 级热区 / 无法编辑的字段：在结构面板定位 */
+    const entry = entryOf(f.id);
+    if (entry) selectEntryInPanel(entry.id, f.id);
+  }
+}
+
+/* ═══════════ 就地编辑浮层 ═══════════ */
+let editorEl = null;
+
+function closeInlineEditor() {
+  if (!editorEl) return;
+  editorEl.remove();
+  editorEl = null;
+}
+
+function openInlineEditor(id, access, anchorEl) {
+  closeInlineEditor();
+  const current = access.get();
+  editorEl = document.createElement('div');
+  editorEl.className = 'inline-editor';
+  editorEl.setAttribute('role', 'dialog');
+  editorEl.setAttribute('aria-label', '编辑 ' + fieldLabel(id));
+  editorEl.innerHTML = `
+    <div class="ie-label">${esc(fieldLabel(id))}</div>
+    <textarea rows="${Math.min(6, Math.max(1, current.split('\n').length))}" spellcheck="false"></textarea>
+    <div class="ie-err banner banner-error hidden" style="margin-top:8px;padding:8px 10px;font-size:12.5px"></div>
+    <div class="ie-actions">
+      <span class="ie-hint">Ctrl+Enter 应用 · Esc 取消</span>
+      <span style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" data-ie="cancel" type="button">取消</button>
+        <button class="btn btn-primary btn-sm" data-ie="save" type="button" style="padding:5px 16px">应用</button>
+      </span>
+    </div>`;
+  document.body.appendChild(editorEl);
+  const ta = editorEl.querySelector('textarea');
+  ta.value = current;
+
+  /* 定位：锚点矩形下方，出屏则上方，再夹进视口 */
+  const rect = anchorEl.getBoundingClientRect();
+  editorEl.style.visibility = 'hidden';
+  const w = editorEl.offsetWidth, h = editorEl.offsetHeight;
+  let x = Math.min(Math.max(12, rect.left), window.innerWidth - w - 12);
+  let y = rect.bottom + 8;
+  if (y + h > window.innerHeight - 12) y = Math.max(12, rect.top - h - 8);
+  editorEl.style.left = x + 'px';
+  editorEl.style.top = y + 'px';
+  editorEl.style.visibility = '';
+  ta.focus();
+  ta.select();
+
+  function save() {
+    const val = ta.value.replace(/\s+$/, '');
+    const errEl = editorEl.querySelector('.ie-err');
+    errEl.classList.add('hidden');
+    saveResume(r => access.set(val)).then(() => {
+      closeInlineEditor();
+    }).catch(e => {
+      errEl.textContent = e.message;
+      errEl.classList.remove('hidden');
+    });
+  }
+  editorEl.addEventListener('click', e => {
+    const act = e.target.closest('[data-ie]');
+    if (!act) return;
+    if (act.dataset.ie === 'save') save();
+    else closeInlineEditor();
+  });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeInlineEditor();
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) save();
+  });
+  setTimeout(() => document.addEventListener('mousedown', outside));
+  function outside(e) {
+    if (editorEl && !editorEl.contains(e.target) && !anchorEl.contains(e.target)) closeInlineEditor();
+  }
+  editorEl._outside = outside;
+}
+
+/* ═══════════ 结构面板 ═══════════ */
+function allIds() {
+  const ids = [];
+  for (const c of (resume.basics.contacts || [])) ids.push(c.id);
+  for (const s of resume.sections) {
+    ids.push(s.id);
+    for (const e of s.entries) {
+      ids.push(e.id);
+      for (const b of e.bullets) ids.push(b.id);
+    }
+  }
+  return ids;
+}
+
+/* 在 base 基础上生成全局唯一 id：base-2、base-3…（base 形如 sec-x / entry-b） */
+function nextId(base) {
+  const used = new Set(allIds());
+  let n = 1;
+  while (used.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+
+function findSectionOfEntry(entryId) {
+  return resume.sections.find(s => s.entries.some(e => e.id === entryId));
+}
+
+function renderStructure() {
+  if (!resume) return;
+  $('#structureBody').innerHTML = resume.sections.map(sec => `
+    <div class="sec-group" data-sec="${esc(sec.id)}">
+      <div class="sec-group-head">
+        <h3 title="${esc(sec.title)}">${esc(sec.title)}</h3>
+        <button class="sec-group-add" data-add-entry="${esc(sec.id)}" title="新增一条经历" type="button">${ICONS.plus}新增</button>
+      </div>
+      ${sec.entries.map(e => {
+        const open = entryOpen.has(e.id);
+        const titleText = e.title || e.subtitle || e.date || '（未命名）';
+        const subText = [e.subtitle, e.date, e.location].filter(Boolean).join(' · ');
+        return `
+        <div class="entry ${open ? 'open' : ''}" data-id="${esc(e.id)}" draggable="true" tabindex="0"
+             title="拖拽在「${esc(sec.title)}」内排序；点击在预览中定位">
+          <div class="entry-head">
+            <span class="e-caret" aria-hidden="true">${ICONS.caret}</span>
+            <span class="grip" aria-hidden="true">${ICONS.grip}</span>
+            <span class="e-main">
+              <span class="e-title">${esc(titleText)}</span>
+              ${subText ? `<span class="e-sub">${esc(subText)}</span>` : ''}
+            </span>
+            <button class="btn-icon danger e-del" data-del-entry="${esc(e.id)}" aria-label="删除经历" type="button">${ICONS.trash}</button>
+          </div>
+          <div class="bullets ${open ? '' : 'closed'}">
+            ${e.bullets.map(b => `
+              <div class="bullet-row" data-bullet="${esc(b.id)}" draggable="true" title="拖拽排序；点击编辑文字" tabindex="0">
+                <span class="grip" aria-hidden="true">${ICONS.grip}</span>
+                <span class="b-text">${esc(b.text)}</span>
+                <button class="btn-icon danger b-del" data-del-bullet="${esc(b.id)}" aria-label="删除要点" type="button">${ICONS.trash}</button>
+              </div>`).join('')}
+            <button class="bullet-add" data-add-bullet="${esc(e.id)}" type="button">${ICONS.plus}加一条要点</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+/* 新增/删除/排序后默认展开，让用户立刻看到新 bullet */
+function ensureOpen(entryId) { entryOpen.add(entryId); }
+
+$('#structureBody').addEventListener('click', e => {
+  const addEntry = e.target.closest('[data-add-entry]');
+  if (addEntry) {
+    const sec = resume.sections.find(s => s.id === addEntry.dataset.addEntry);
+    const id = nextId(sec.id + '-e');
+    ensureOpen(id);
+    saveResume(() => sec.entries.push({ id, title: '新经历（待填写）', subtitle: '', date: '', location: '', bullets: [] }))
+      .then(() => selectEntryInPanel(id)).catch(() => {});
+    return;
+  }
+  const delEntry = e.target.closest('[data-del-entry]');
+  if (delEntry) {
+    const id = delEntry.dataset.delEntry;
+    const sec = findSectionOfEntry(id);
+    const entry = sec.entries.find(x => x.id === id);
+    if (!confirm(`删除经历「${entry.title || '（未命名）'}」及其全部要点？`)) return;
+    entryOpen.delete(id);
+    saveResume(() => { sec.entries.splice(sec.entries.indexOf(entry), 1); })
+      .then(() => toast('已删除经历')).catch(() => {});
+    return;
+  }
+  const addBullet = e.target.closest('[data-add-bullet]');
+  if (addBullet) {
+    const entry = entryOf(addBullet.dataset.addBullet);
+    const id = nextId(entry.id + '-b');
+    ensureOpen(entry.id);
+    saveResume(() => entry.bullets.push({ id, text: '新要点（待填写）' }))
+      .then(() => selectEntryInPanel(entry.id)).catch(() => {});
+    return;
+  }
+  const delBullet = e.target.closest('[data-del-bullet]');
+  if (delBullet) {
+    const id = delBullet.dataset.delBullet;
+    for (const s of resume.sections) for (const en of s.entries) {
+      const i = en.bullets.findIndex(b => b.id === id);
+      if (i >= 0) {
+        saveResume(() => { en.bullets.splice(i, 1); }).then(() => toast('已删除要点')).catch(() => {});
+        return;
+      }
+    }
+    return;
+  }
+  /* 点击 bullet 文字 → 编辑（不是按钮/把手时） */
+  const bulletRow = e.target.closest('.bullet-row');
+  if (bulletRow && !e.target.closest('button')) {
+    const access = fieldAccess(bulletRow.dataset.bullet);
+    if (access) openInlineEditor(bulletRow.dataset.bullet, access, bulletRow);
+    return;
+  }
+  /* 点击经历 → 画布定位（不触发拖拽） */
+  const entryCard = e.target.closest('.entry');
+  if (entryCard && !e.target.closest('button') && !e.target.closest('.bullets')) {
+    selectEntryInPanel(entryCard.dataset.id);
+  }
+});
+
+/* caret 展开/收起 bullets */
+$('#structureBody').addEventListener('click', e => {
+  const caret = e.target.closest('.e-caret');
+  if (!caret) return;
+  e.stopPropagation();
+  const card = caret.closest('.entry');
+  const id = card.dataset.id;
+  if (entryOpen.has(id)) entryOpen.delete(id); else entryOpen.add(id);
+  card.classList.toggle('open');
+  card.querySelector('.bullets').classList.toggle('closed');
+});
+
+/* 选中经历：面板高亮 + 画布热区闪烁定位 */
+function selectEntryInPanel(entryId, flashId) {
+  renderStructure();
+  $$('.entry', $('#structureBody')).forEach(el => el.classList.toggle('active', el.dataset.id === entryId));
+  const card = $(`.entry[data-id="${CSS.escape(entryId)}"]`, $('#structureBody'));
+  if (card) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  /* 画布侧：闪该条目的 entry 热区（或指定字段）并滚过去 */
+  const target = flashId || entryId;
+  const hot = $(`.hot[data-id="${CSS.escape(target)}"]`);
+  if (hot) {
+    hot.classList.add('flash');
+    setTimeout(() => hot.classList.remove('flash'), 1800);
+    const wrapEl = $('#canvasWrap');
+    const tTop = hot.getBoundingClientRect().top;
+    const wTop = wrapEl.getBoundingClientRect().top;
+    wrapEl.scrollTo({ top: wrapEl.scrollTop + (tTop - wTop) - wrapEl.clientHeight / 3, behavior: 'smooth' });
+  }
+}
+
+/* ═══════════ 拖拽排序（同板块 / 同经历内；跨板块拒绝） ═══ */
+let dragInfo = null;   // {type:'entry'|'bullet', id}
+
+function moveWithin(list, fromId, targetId, above) {
+  const from = list.findIndex(x => x.id === fromId);
+  if (from < 0 || fromId === targetId) return false;
+  const [moved] = list.splice(from, 1);
+  const to = list.findIndex(x => x.id === targetId);
+  if (to < 0) { list.splice(from, 0, moved); return false; }   // 目标不在同一列表
+  list.splice(above ? to : to + 1, 0, moved);
+  return true;
+}
+
+const body = $('#structureBody');
+body.addEventListener('dragstart', e => {
+  const entryCard = e.target.closest('.entry');
+  const bulletRow = e.target.closest('.bullet-row');
+  if (bulletRow) {
+    dragInfo = { type: 'bullet', id: bulletRow.dataset.bullet };
+    bulletRow.classList.add('dragging');
+  } else if (entryCard && !e.target.closest('.bullets')) {
+    dragInfo = { type: 'entry', id: entryCard.dataset.id };
+    entryCard.classList.add('dragging');
+  } else { return; }
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragInfo.id);
+});
+body.addEventListener('dragend', () => {
+  dragInfo = null;
+  $$('.dragging', body).forEach(el => el.classList.remove('dragging'));
+  $$('.drop-above,.drop-below', body).forEach(el => el.classList.remove('drop-above', 'drop-below'));
+});
+body.addEventListener('dragover', e => {
+  if (!dragInfo) return;
+  let target;
+  if (dragInfo.type === 'entry') target = e.target.closest('.entry');
+  else target = e.target.closest('.bullet-row');
+  if (!target || target.dataset[dragInfo.type === 'entry' ? 'id' : 'bullet'] === dragInfo.id) return;
+  e.preventDefault();
+  const rect = target.getBoundingClientRect();
+  const above = e.clientY < rect.top + rect.height / 2;
+  $$('.drop-above,.drop-below', body).forEach(el => el.classList.remove('drop-above', 'drop-below'));
+  target.classList.add(above ? 'drop-above' : 'drop-below');
+});
+body.addEventListener('drop', e => {
+  if (!dragInfo) return;
+  e.preventDefault();
+  const above = (() => {
+    const t = e.target.closest(dragInfo.type === 'entry' ? '.entry' : '.bullet-row');
+    if (!t) return true;
+    const rect = t.getBoundingClientRect();
+    return e.clientY < rect.top + rect.height / 2;
+  })();
+
+  if (dragInfo.type === 'entry') {
+    const targetEl = e.target.closest('.entry');
+    if (!targetEl) return;
+    const fromSec = findSectionOfEntry(dragInfo.id);
+    const toSec = findSectionOfEntry(targetEl.dataset.id);
+    if (fromSec !== toSec) { toast('不支持把经历拖到其他板块'); return; }
+    saveResume(() => { moveWithin(fromSec.entries, dragInfo.id, targetEl.dataset.id, above); }).catch(() => {});
+  } else {
+    const targetEl = e.target.closest('.bullet-row');
+    if (!targetEl) return;
+    const fromEntry = entryOf(dragInfo.id);
+    const toEntry = entryOf(targetEl.dataset.bullet);
+    if (fromEntry !== toEntry) { toast('要点只能在同一条经历内排序'); return; }
+    saveResume(() => { moveWithin(fromEntry.bullets, dragInfo.id, targetEl.dataset.bullet, above); }).catch(() => {});
+  }
+});
+
+/* ═══════════ 模板切换栏 ═══ */
+function renderTplThumbs() {
+  const cur = resume ? resume.meta.template_id : null;
+  $('#tplThumbs').innerHTML = templates.map(t => `
+    <button class="tpl-thumb ${t.id === cur ? 'active' : ''}" data-tpl="${esc(t.id)}" type="button"
+            title="${esc(t.name)}${t.id === cur ? '（当前模板）' : ' · 点击更换（Agent 会重新排版检查）'}"
+            aria-pressed="${t.id === cur}">
+      <span class="mini">${t.preview_url ? `<img src="${esc(RB.authedUrl(t.preview_url))}" alt="" loading="lazy" />` : '<span class="mini-blank">无预览</span>'}</span>
+      <span>${esc(t.name)}${t.internal ? ' ·内部' : ''}</span>
+    </button>`).join('');
+}
+
+$('.tplbar').addEventListener('click', e => {
+  const btn = e.target.closest('[data-tpl]');
+  if (!btn || !resume) return;
+  const id = btn.dataset.tpl;
+  if (id === resume.meta.template_id) return;
+  btn.disabled = true;
+  api('/api/template/select', { method: 'POST', body: { template_id: id } })
+    .then(() => { location.href = '/waiting'; })
+    .catch(err => {
+      btn.disabled = false;
+      toast('更换模板失败：' + err.message, 6000);
+    });
+});
+
+/* ═══════════ 工具栏：导出 / 完成 ═══ */
+const exportBtn = $('#exportBtn'), exportMenu = $('#exportMenu');
+function openMenu() { exportMenu.classList.add('open'); exportBtn.setAttribute('aria-expanded', 'true'); }
+function closeMenu() { exportMenu.classList.remove('open'); exportBtn.setAttribute('aria-expanded', 'false'); }
+exportBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  exportMenu.classList.contains('open') ? closeMenu() : openMenu();
+});
+document.addEventListener('click', e => { if (!e.target.closest('.menu-wrap')) closeMenu(); });
+exportMenu.addEventListener('click', e => {
+  const item = e.target.closest('[data-menu="pdf"]');
+  if (!item) return;
+  closeMenu();
+  item.disabled = true;
+  api('/api/export', { method: 'POST', body: {} })
+    .then(res => {
+      toast('已导出：' + res.filename + '（' + res.pages + ' 页）' + (res.warning ? '\n⚠ ' + res.warning : ''), res.warning ? 6000 : 3200);
+    })
+    .catch(err => toast('导出失败：' + err.message, 6000))
+    .finally(() => { item.disabled = false; });
+});
+
+$('#doneBtn').addEventListener('click', () => {
+  $('#doneBtn').disabled = true;
+  api('/api/editing-done', { method: 'POST', body: {} })
+    .then(() => toast('已通知 Agent 进行最终检查与导出'))
+    .catch(e => toast('失败：' + e.message, 5000))
+    .finally(() => { $('#doneBtn').disabled = false; });
+});
+$('#emptyRetry').addEventListener('click', () => {
+  api('/api/render', { method: 'POST', body: {} }).then(() => toast('已重新排队渲染')).catch(e => toast(e.message));
+});
+
+/* ═══════════ 结构面板折叠 ═══ */
+const structure = $('#structure'), railToggle = $('#railToggle');
+function setStructure(open) {
+  structure.classList.toggle('collapsed', !open);
+  railToggle.classList.toggle('collapsed', !open);
+  railToggle.setAttribute('aria-expanded', open);
+  railToggle.setAttribute('aria-label', open ? '折叠结构面板' : '展开结构面板');
+}
+railToggle.addEventListener('click', () => setStructure(structure.classList.contains('collapsed')));
+$('#closeStructure').addEventListener('click', () => setStructure(false));
+
+/* ═══════════ 事件轮询：外部修改 / 阶段切换 / 渲染完成 ═══ */
+function handleEvent(ev, state) {
+  if (ev === null) {
+    /* 空 tick 兜底：基线竞态漏掉的阶段翻转由当前状态补上 */
+    if (state && (state.stage === 'generating' || state.stage === 'gallery'
+                  || state.stage === 'writing')) {
+      location.replace(state.stage === 'generating' ? '/waiting' : '/gallery');
+    }
+    return;
+  }
+  if (ev.type === 'stage') {
+    const stage = ev.data && ev.data.stage;
+    if (stage === 'generating') { location.replace('/waiting'); return; }
+    if (stage === 'gallery') { location.replace('/gallery'); return; }
+    return;
+  }
+  if (ev.type === 'resume_changed' && ev.data && ev.data.source === 'external') {
+    /* Agent 改了 resume.json：重读数据（就地编辑浮层里的草稿不受影响，
+       保存时写到最新数据上） */
+    api('/api/resume').then(data => {
+      resume = data;
+      renderStructure();
+      renderTplThumbs();
+      toast('Agent 已更新简历内容');
+    }).catch(() => {});
+    return;
+  }
+  if (ev.type === 'rendered') { onRenderDone(true, ev.data); return; }
+  if (ev.type === 'render_failed') { onRenderDone(false, ev.data); return; }
+}
+
+/* ═══════════ 启动 ═══ */
+async function boot() {
+  if (warnNoToken('编辑器')) { setStatus('idle', '缺少令牌'); return; }
+  try {
+    const state = await api('/api/state');
+    if (state.stage === 'generating') { location.replace('/waiting'); return; }
+    if (state.stage === 'gallery' || state.stage === 'writing') { location.replace('/gallery'); return; }
+  } catch (e) { /* 状态读不到也能编辑已渲染产物 */ }
+
+  try {
+    const [resumeData, tplRes] = await Promise.all([
+      api('/api/resume'),
+      api('/api/templates?all=1'),
+    ]);
+    resume = resumeData;
+    templates = tplRes.templates;
+    if (!templates.some(t => t.id === resume.meta.template_id)) {
+      /* 当前模板不在列表（如手工指到不存在的 id）：占位显示 */
+      templates.push({ id: resume.meta.template_id, name: resume.meta.template_id, preview_url: '', internal: true });
+    }
+    entryOpen = new Set(resume.sections.flatMap(s => s.entries.map(e => e.id)));
+    renderStructure();
+    renderTplThumbs();
+    await refreshCanvas();
+    if (!layoutMap) setStatus('idle', '等待渲染');
+    else setStatus('saved', '已就绪');
+  } catch (e) {
+    setStatus('failed', '加载失败');
+    toast('加载失败：' + e.message, 8000);
+    return;
+  }
+  startEventPolling([handleEvent]);
+}
+
+boot();
+</script>
+</body>
+</html>

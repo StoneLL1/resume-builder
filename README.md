@@ -1,184 +1,163 @@
 # resume-builder
 
-<p align="center">
-  <img src="cover.png" alt="resume-builder" width="720">
-</p>
+**从真实经历到可投递简历的 Agent Skill。**
 
-<p align="center"><em>turn your chaos into career ✨</em></p>
+简体中文 · [English](README.en.md)
 
-<div align="center">
+![resume-builder 原始封面](cover.png)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai/code)
-[![AgentSkills](https://img.shields.io/badge/AgentSkills-Standard-green)](https://agentskills.io)
-[![Multi-Agent](https://img.shields.io/badge/Runs%20on-Codex%20%7C%20OpenClaw%20%7C%20Hermes%20%7C%20Claude-22a7cc)](#哪个-agent-都能用)
+`resume-builder` 将主动提问、事实核对、内容撰写、模板选择和 PDF 导出整合为一套工作流，适用于中文或英文的 1–2 页求职、实习、比赛与升学简历。
 
-</div>
+写作方法论**蒸馏自近百篇小红书高赞简历经验帖**，沉淀为 Agent 动笔前必须阅读的写作指南。用户提供已有材料和目标，Agent 主动识别信息缺口、追问个人贡献与成果证据，再通过本地模板画廊和可视化编辑器完成交付。
 
-> 配套的写作方法论不是模型拍脑袋编的——蒸馏自小红书**近百篇高赞简历经验帖**，全是真人投递、面试、复盘出来的干货：量化怎么估才不露馅、STAR 怎么落到字面上、哪些词 HR 看一眼就划走。
+[What's New](#whats-new) · [核心能力](#features) · [界面预览](#screenshots) · [快速开始](#quick-start) · [安装说明](INSTALL.md)
 
----
+<a id="whats-new"></a>
 
-写简历最难的从来不是排版。
+## What's New
 
-是你明明有一堆经历，却卡在一堆更烦的问题上：这条到底写不写？那个数字我记不清了，估一个会不会被发现？我根本不是这个专业的，怎么写才不会被 HR 一秒划掉？大部分简历工具只管给你套个模板，剩下这些真正费脑子的事，全丢给你自己。
+- **中英文模板画廊**：中文 9 套、英文 9 套，支持分类切换、完整预览与选择记忆。
+- **浏览器可视化精修**：点击文字块编辑，增删经历与要点，在同一板块内拖拽排序。
+- **Typst 排版与实时预览**：保存后自动重新渲染，显示实际页数，导出规范命名的 PDF。
+- **对话与网页协作**：Agent 和编辑器共享 `resume.json`，内容调整可在两种方式之间继续。
+- **事实核对页面**：查看表述来源，按已确认、待确认、缺失阻塞、已省略四种状态筛选。
+- **两阶段撰写**：先形成与模板无关的内容稿，再针对所选版式精修；换模板后重新检查。
 
-`resume-builder` 是一个**哪个 agent 都能用**的中文简历 skill——Claude Code、Codex、OpenClaw、Hermes 都行。它不替你编故事，也不塞你一个花哨模板了事。它把"做一份简历"拆成九步，从选模板一直带到出 PDF。但它真正跟别的不一样的地方，就一点。
+<a id="features"></a>
 
-**它死活不肯编。**
+## 核心能力
 
----
+### 主动追问，补齐有价值的信息
 
-## 先说最重要的：为什么是它
+不要求用户先整理出一份完整简历。Agent 会从旧简历、零散文字或口述经历出发，确认目标，筛选素材，再按优先级分批提问，通常每批 3–6 个问题。
 
-### 不编造，是写进流程里的，不是口号
+例如，“参与校园报名系统开发”会引出对职责边界、技术选择、实际难点、使用情况和交付物的追问。用户补充后，Agent 更新证据记录，继续处理尚未解决的关键缺口。用户明确表示“没有”“跳过”或“不写”的内容不会被反复追问。
 
-每一条写进简历的事实，都得有出处。skill 会给每份简历建一张小表，叫 claim-map，长这样：
+素材充分后，Agent 自行推进到模板选择。用户负责提供事实、确认取舍和选择版式，无需逐步编排整个流程。
 
-| 简历内容 | 来源 | 状态 |
-|---|---|---|
-| 某某大学 计算机本科 | 原 PDF / 你口述 | ✅ 已确认 |
-| 实习绩效 年化 X% | 还没问清楚 | ⛔ 缺失阻塞 |
-| 高数成绩 | 你说不写 | ➖ 已省略 |
+### 小红书经验沉淀为写作规则
 
-四种状态：**已确认**才能写进简历，**待确认**先放一边，**缺失阻塞**必须停下来问清楚，**已省略**是你拍板不要的。
+[完整写作指南](references/Resume-Writing-Guide-LLM.md) 覆盖技术、AI / Agent、数据、产品运营、应届、转行和复试等场景。README 仅概括四项原则：
 
-学校、公司、时间日期、绩效、规模、排名、star 数——这些"高危项"，只要不是你亲口确认过的，一律先标成 ⛔，然后它就停下来等你。你不给，它不动笔。
+- **目标决定取舍**：一个目标一份简历，优先展示相关且有证据的经历。
+- **突出个人贡献**：写清问题、个人动作与结果，不以职责清单代替成果。
+- **证据优先于数字**：有可信指标时核对口径；没有数字时使用上线、采用、验收或交付物等事实。
+- **表达经得起追问**：不虚构经历、夸大角色或将团队成果归为个人成果。
 
-听着挺轴。但这正好挡住了 AI 写简历最容易出的车祸：把"参与"美化成"主导"，随手编一个"提升 30%"，把别人做的项目算到你头上。这些东西笔试看不出来，一面试全露。简历是写来经得起追问的，不是写给自己爽的。
+这些经验已整理在项目中，使用时无需访问或登录小红书。
 
-### 一个目标，一份简历
+### 事实可追溯，项目可继续编辑
 
-它不搞"万能简历"那套。求职、比赛、升学，每个目的一份独立、能直接编译的文件夹。跟目标无关的经历，它会让你果断删，还告诉你为什么删。手上同时投三个方向？那就三份，分别打磨。通投一份是最蠢的，这点它比你坚持。
+每份简历维护独立的事实追溯表和用途目录。Agent 只使用已确认的事实撰写内容；网页只读展示事实状态，修改措辞不会自动确认事实。导出按钮本身不拦截未确认项，真实性由写作流程与终检把关。
 
-### 给不对口的经历找活路
+内容和会话保存在本地，关闭浏览器后可恢复。Agent 与网页并发编辑时以后保存的内容为准，不自动合并冲突。
 
-不是科班、想转行、经历跟岗位八竿子打不着——这种情况它不装看不见。它会把旧经历里的可迁移能力挖出来，用目标领域的语言重新讲一遍：做实验摸出来的数据分析、为方便自己写的小工具、组织社团练出来的协调能力。
+<a id="screenshots"></a>
 
-但这里有条硬线：**重包装 ≠ 编造**。它只用你确认过的事实重新组织措辞，绝不凭空给你加戏。
+## 界面预览
 
-### 一页纸优先
+以下为真实本地界面截图。编辑器使用虚构演示素材；画廊卡片使用上游公开模板预览，来源见 [截图说明](assets/screenshots/README.md)。
 
-求职、比赛简历默认压成一页。不是信条，是现实：HR 一份简历看大概三十秒，信息密度比信息量重要。一页之内把最相关的卖点全摆出来，比写满两页更难，也更有用。
+### 模板画廊
 
-### 哪个 agent 都能用
+按中文或英文浏览，点击预览查看完整大图，再由用户选择模板。切换分类不会修改正文；跨语言选定模板后，Agent 负责翻译、精修与核验。
 
-它不绑死在 Claude 上。skill 用的是标准的 AgentSkills `SKILL.md` 格式，任何能读 skill 的 agent 都能加载——目前实测 **Claude Code、Codex、OpenClaw、Hermes** 都能用，原理上其它符合标准的 runner 也行。安装也不挑 agent：把一句"fetch and follow"丢给你的 agent，它自己拉 `INSTALL.md`、按里面的步骤装好。具体见下面[安装](#安装)。
+| 中文模板 | 英文模板 |
+|---|---|
+| ![中文模板画廊](assets/screenshots/gallery-zh.png) | ![英文模板画廊](assets/screenshots/gallery-en.png) |
 
----
+### 可视化编辑器
 
-## 它能干什么（九步流水线）
+预览由 Typst 实际渲染，支持文字块编辑、结构调整、模板切换与页数查看。较大幅度的内容修改仍可在 Agent 对话中完成。
 
-1. **选模板** —— 先甩一张对照表给你挑，不替你决定。默认推荐 billryan 那套单栏、无照片的，走 ATS 招聘系统不容易被解析挂。
-2. **收集** —— 读你的 PDF、粘贴的文字、口头说的，整理成素材库。Windows 终端的 GBK 报错它也帮你处理掉。
-3. **确认目标** —— 到底是冲哪个岗位、哪个比赛、哪所学校。这个不清，后面全是白干，所以它先问清楚再动笔。
-4. **筛选** —— 按目标挑相关项、砍无关项，给你一张"保留 vs 删掉"的对照表，每条都带理由。
-5. **缺口提问** —— 缺的信息分优先级、成批地问你。优先问那些能明显抬升含金量的硬货：数字、对口项目、技能深度。你说"没有 / 跳过"，它就记下来，不再追着问。
-6. **撰写** —— 只动用已确认的事实。每条经历必须量化（规模、比例、排名、star 数），用 STAR 或场景化写法，关键词和数据加粗，动词开头。
-7. **编译** —— XeLaTeX 出单页 PDF。Windows 自带字体开箱即编，mac / Linux 有对应的字体替换方案。
-8. **归档** —— 每个用途一个独立文件夹，交付的 PDF 和中间素材分开放。原始模板始终不被动，谁也不许弄脏它。
-9. **迭代** —— 按反馈改。事实缺了回收集，措辞烂了回撰写，LaTeX 报错直接修，不绕路。
+![可视化编辑器与简历结构面板](assets/screenshots/editor.png)
 
----
+<details>
+<summary>查看就地编辑与事实核对</summary>
 
-## 它不做什么（边界很硬）
+**文字块编辑**：点击预览中的字段进行修改，支持加粗和链接，保存后自动重新排版。
 
-它只做中文（或双语）一到两页的求职 / 比赛 / 升学简历。下面这些，它直接告诉你超出范围，不硬上：
+![就地编辑简历文字块](assets/screenshots/inline-edit.png)
 
-- 求职信、推荐信
-- 作品集、个人主页、PPT
-- 多页学术 CV（那种带完整 publications list 的教职 / 博后简历）
-- 周报、研究计划这种非简历文档
+**事实核对**：查看来源与四种确认状态；状态由 Agent 在对话中维护。
 
-不是做不到，是别在一个简历 skill 里指望它做。专精一件事，比啥都接、啥都半吊子强。
+![事实核对与状态筛选](assets/screenshots/facts.png)
 
----
+</details>
 
-## 安装
+<a id="quick-start"></a>
 
-不挑 agent，任选其一。
+## 快速开始
 
-**方法一（推荐，任何 agent 通用）：** 把下面这段原样粘给 Claude Code / Codex / OpenClaw / Hermes，它自己拉取 `INSTALL.md` 并按里面的步骤装好：
+将以下内容发送给能够读写本地文件、执行命令并加载 `SKILL.md` 的 Agent：
 
 ```text
 Fetch and follow instructions from:
 https://raw.githubusercontent.com/StoneLL1/resume-builder/main/INSTALL.md
 ```
 
-**方法二（手动 clone）：** 把仓库丢进你 agent 的 skill 目录。Claude Code 的目录是 `~/.claude/skills`（或项目 `.claude/skills/`），其它 agent 的目录见 `INSTALL.md` 里的对照表。
+也可以让 Agent 读取本地项目中的 [INSTALL.md](INSTALL.md)。安装说明面向 Agent，包含目录探测、文件部署、依赖准备与验证流程。Claude Code、Codex 可按各自技能目录接入，OpenClaw、Hermes 等使用其实际 runner 配置。
 
-```bash
-git clone https://github.com/StoneLL1/resume-builder.git .claude/skills/resume-builder
+安装后，例如：
+
+```text
+请使用 resume-builder，针对这份 JD 帮我制作一页中文简历。
+我会提供旧简历和补充经历。请主动追问缺失信息，核对事实后再撰写；
+内容充分后打开模板画廊，让我选择版式并在网页中精修。
 ```
 
-装好之后跟 agent 说一句"帮我写简历"、"改简历"、"投 XX 岗位，要份简历"就行。触发词：简历、resume、CV、投简历、改简历。
+Windows / macOS 提供运行时引导脚本，准备 Python、Typst 和开放字体，无需 Node.js 或 XeLaTeX。部分模板依赖本机原版字体，详见 [安装说明](INSTALL.md)。
 
-前提是机器上有 XeLaTeX（装个 TeX 发行版即可，TeX Live 或 MiKTeX 都行）。详细的分 agent 目录、PowerShell / POSIX 命令、验证步骤都在 `INSTALL.md` 里。
+## 工作流
 
----
-
-## 目录结构
-
+```mermaid
+flowchart LR
+    A[目标与素材] --> B[主动追问与事实核对]
+    B --> C[内容撰写]
+    C --> D[用户选择模板]
+    D --> E[排版检查与网页精修]
+    E --> F[终检与 PDF 导出]
+    E -->|更换模板| D
 ```
+
+旧简历、JD 和补充材料通过对话提供。内容充分后才启动网页。编辑完成后，点击「完成」通知 Agent 终检，再通过「导出 → 导出正式 PDF」生成 `姓名-目标岗位-电话.pdf`；缺少电话时省略该部分。
+
+## 模板
+
+| 分类 | 内置模板 |
+|---|---|
+| 中文 · 9 套 | OrangeX4、Chi CV 原版 / 中文版、Resume NG、Miku CV、Qianxi、Unique CV、Habaneraa、SweetGargamel。 |
+| 英文 · 9 套 | RenderCV Classic / ModernCV / Harvard / Ink / Opal、Basic Resume、ImpreCV、Modern CV、Index CV。 |
+
+沿用上游布局与字体，保留固定版本、来源和适配差异；Harvard 提供纯黑白版式。完整信息见 [模板注册表](assets/templates/registry.md)。
+
+## 项目结构
+
+```text
 resume-builder/
-├── SKILL.md                       # skill 主体：九步流程 + 全部规则
-├── INSTALL.md                     # 多 agent 安装（fetch-and-follow 入口）
-├── README.md                      # 你正在看的这个
-├── cover.png
-├── references/
-│   ├── writing-guide.md           # 撰写方法论，蒸馏自近百篇小红书高赞经验帖
-│   └── compile-guide.md           # XeLaTeX 编译、字体、单页排版、排错
-└── example/
-    └── resume-example.tex         # 一份脱敏的示例简历，照着抄结构
+├── SKILL.md                       # Agent 入口与阶段路由
+├── INSTALL.md                     # Agent 安装流程
+├── README.md / README.en.md        # 中文 / 英文介绍
+├── cover.png                      # 原始封面
+├── references/                    # 写作指南、数据契约与阶段说明
+├── scripts/                       # 安装、服务、渲染与校验
+└── assets/                        # 模板、网页、依赖清单与截图
 ```
 
-`SKILL.md` 里只有规则和流程，没有任何真实个人信息——这是刻意的。所有示例都是占位符：`{{姓名}}`、`(+86) 138-xxxx-xxxx`、`example@mail.com`、`某某大学`。你的真实数据只待在你自己的简历文件夹里，不会回灌进 skill。
+每个用途另建目录，在 skill 之外保存 `resume.json`、正式 PDF，以及 `work/` 下的素材、事实追溯表、会话状态与构建中间产物。
 
----
+## 运行范围与数据
 
-## 模板对照
+- 支持桌面浏览器中的中文或英文单语 1–2 页简历；自动安装脚本覆盖 Windows 与 macOS，当前不提供 Linux 安装清单。
+- 网页与排版服务仅监听 `127.0.0.1`。首次安装需要下载运行时与开放字体；模板与 Typst 包随项目提供。
+- 与 Agent 对话时的数据处理取决于所用 Agent 和模型服务，不能将本地网页运行等同于整个 AI 工作流离线运行。
+- 当前不提供双语混排、手机 / 平板编辑、网页上传旧简历或 JD、内置 AI 聊天、跨板块拖拽或历史快照回滚。
+- 求职信、作品集和多页学术 CV 不在范围内。
 
-默认从 [awesome-resume-for-chinese](https://github.com/dyweb/awesome-resume-for-chinese) 合集里挑。选定时 skill 会 clone 对应仓库、读它的 README 和 `.cls`，再动手写。
+<a id="licenses"></a>
 
-| 模板 | 特点 | 适合 |
-|---|---|---|
-| **billryan/resume**（默认推荐） | 单栏、简洁、默认无照片 | 求职 / 比赛 / 升学通用 |
-| Deedy-Resume-for-Chinese | 双栏、信息密度高 | 应届求职 |
-| resume-ng | 高密度 + 好看 | 经历多的简历 |
-| liweitianux/resume | 中英双语 | 双语简历 |
-| luooofan/resume | billryan 的改良版 | 通用 |
-| 考研复试专用模板 | 复试向 | 升学 |
+## 致谢与许可
 
-> 走 ATS（招聘系统自动筛简历）的场景，认准单栏、无表格、无照片。双栏和花排版经常被解析器读错。
+感谢小红书简历经验分享者，以及开源模板、Typst、字体与图标项目的维护者。
 
-不喜欢 LaTeX 也行，合集里有 Markdown（pandoc 渲染）和 Typst 的路线，换了工具链 skill 也能跟着走。
-
----
-
-## 两份参考文档
-
-skill 主体尽量保持精简，重的东西拆进了 `references/`，需要时才加载：
-
-- **`writing-guide.md`** —— 蒸馏自小红书近百篇高赞简历经验帖。涵盖撰写公式（量化铁律、STAR、场景化五步法、三要素）、结构与排序、技术岗 / 三无大学生 / 转行 / 运营 / 英文简历的分场景写法、JD 关键词匹配、排版红线、投递规范、交付前的检查清单。
-- **`compile-guide.md`** —— XeLaTeX 工具链、Windows / macOS / Linux 三套中文字体方案、单页排版的边距与间距、预览渲染命令、常见报错排查。
-
----
-
-## 给谁用
-
-- 应届找工作、找实习，简历一片空白或者一团乱
-- 打比赛、申请保研 / 考研复试，要做针对性简历
-- 转行，旧经历不知道怎么往新方向上靠
-- 就是单纯想要一份不花哨、经得起追问的单页 PDF
-
-不适合：想要花哨设计感的（去找设计师模板）、要写英文长篇学术 CV 的、指望 AI 帮你把经历吹上天的。这三种，请出门左转。
-
----
-
-## 致谢
-
-模板来自开源社区，尤其 [billryan/resume](https://github.com/billryan/resume) 和 [dyweb/awesome-resume-for-chinese](https://github.com/dyweb/awesome-resume-for-chinese)。撰写方法论蒸馏自小红书上一批认真分享简历经验的原作者。封面那张手绘插画，是这套 skill 的脸面——"DELETE THE DEFAULT RESUME" 和 "CAFFEINE > TALENT"，大概就是它整个的脾气。
-
-## License
-
-MIT。
+项目原创部分采用 [MIT 许可证](LICENSE)。第三方资产遵循各自许可，详见 [模板注册表](assets/templates/registry.md)、各模板的 `ATTRIBUTION.md` 和 [运行时说明](assets/runtime-NOTICES.md)。OrangeX4、Chi CV 中文版和 Unique CV 的固定上游版本未声明独立许可证，记录为 `NOASSERTION`，不由本项目 MIT 授权覆盖。

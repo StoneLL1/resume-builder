@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>状态观察 · Resume Builder</title>
+<style>
+  :root { color-scheme: light; --ink:#1c1c1e; --muted:#55555a; --accent:#2a5caa; --line:#d8dbe1; --bg:#eef0f3; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Segoe UI","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:10px 18px; background:#1c2a3a; color:#fff; display:flex; gap:16px; align-items:center; }
+  header h1 { font-size:14px; margin:0; font-weight:600; }
+  header .meta { font-size:12px; opacity:.8; }
+  main { max-width: 860px; margin: 0 auto; padding: 20px; display: grid; gap: 16px; }
+  .card { background:#fff; border-radius:10px; padding:16px 18px; box-shadow:0 2px 14px rgba(0,0,0,.10); }
+  .card h2 { font-size:13px; margin:0 0 10px; color:var(--accent); }
+  /* 阶段时间线 */
+  .stages { display:flex; flex-wrap:wrap; gap:6px; }
+  .stage { padding:6px 12px; border-radius:999px; border:1px solid var(--line); font-size:12px; color:var(--muted); }
+  .stage.on { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  .stage.done { border-color:var(--accent); color:var(--accent); }
+  .kv { font-size:13px; margin:6px 0; }
+  .kv b { display:inline-block; min-width:7em; color:var(--muted); font-weight:500; }
+  .err { background:#fdeeee; border:1px solid #e5b4b4; color:#a33; border-radius:8px;
+         padding:10px 12px; font-size:13px; white-space:pre-wrap; }
+  .ok-note { color:var(--muted); }
+  /* 事件流 */
+  #events { font-size:12px; font-family:Consolas,monospace; max-height:240px; overflow:auto;
+            background:#f4f5f7; border-radius:8px; padding:10px 12px; line-height:1.7; }
+  #events .ev b { color:var(--accent); }
+  #events .dim { color:#999; }
+  /* 开发用选择器 */
+  select, button { font:inherit; }
+  select { padding:6px 8px; border:1px solid var(--line); border-radius:8px; max-width:320px; }
+  button { padding:6px 16px; border:1px solid var(--accent); background:var(--accent); color:#fff;
+           border-radius:8px; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+  .hint { font-size:12px; color:var(--muted); }
+  #devResult { font-size:12px; margin-top:8px; color:var(--muted); min-height:1em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Resume Builder · 状态观察页</h1>
+  <span class="meta" id="meta">Batch 4 验证页（正式画廊/等待页在 Batch 5 落地）</span>
+</header>
+<main>
+  <section class="card">
+    <h2>当前阶段</h2>
+    <div class="stages" id="stages"></div>
+    <div class="kv"><b>说明</b><span id="note" class="ok-note">—</span></div>
+    <div class="kv"><b>当前模板</b><span id="tpl">—</span></div>
+    <div class="kv"><b>渲染</b><span id="render">尚未渲染</span></div>
+    <div class="err" id="error" hidden></div>
+  </section>
+
+  <section class="card">
+    <h2>事件流（自动轮询 /api/events）</h2>
+    <div id="events"><span class="dim">等待事件…</span></div>
+    <p class="hint">Agent 侧 <code>wait_for_event.py</code> 正在等待 template_selected / template_change_requested / editing_done。下面的选择器模拟画廊确认按钮。</p>
+    <div class="row">
+      <select id="tplSelect"></select>
+      <button id="selectBtn">确认模板（模拟画廊）</button>
+      <button id="doneBtn" style="background:#3a7d44;border-color:#3a7d44">完成编辑（editing_done）</button>
+    </div>
+    <div id="devResult"></div>
+  </section>
+</main>
+
+<script>
+'use strict';
+const STAGE_LIST = [['writing','写作中'],['gallery','选模板'],['generating','生成中'],['editor','编辑器'],['done','已导出']];
+
+/* 令牌：URL ?token= 优先，其次 sessionStorage（同一会话内刷新免带）。 */
+const qs = new URLSearchParams(location.search);
+const token = qs.get('token') || sessionStorage.getItem('rb-token') || '';
+if (token) sessionStorage.setItem('rb-token', token);
+else document.getElementById('meta').textContent = '缺少令牌：请从 Agent 给出的带 ?token= 的链接打开本页';
+
+let cursor = 0, lastState = null;
+
+async function api(path, opts = {}) {
+  const init = Object.assign({ headers: { 'X-Resume-Token': token } }, opts);
+  if (init.body && typeof init.body === 'object') {
+    init.headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(init.body);
+  }
+  const r = await fetch(path, init);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || (path + ' → ' + r.status));
+  return data;
+}
+
+function renderState(state) {
+  lastState = state;
+  const order = STAGE_LIST.map(s => s[0]);
+  const cur = order.indexOf(state.stage);
+  document.getElementById('stages').innerHTML = STAGE_LIST.map(([key, zh], i) =>
+    `<span class="stage${i === cur ? ' on' : i < cur ? ' done' : ''}">${zh}</span>`).join('');
+  document.getElementById('note').textContent = state.note || '—';
+  document.getElementById('tpl').textContent = state.template_id || '—';
+  const r = state.render;
+  document.getElementById('render').textContent = !r ? '尚未渲染'
+    : r.ok ? `✓ ${r.pages} 页 · ${r.fields} 个热区 · ${r.elapsed_ms}ms（${r.template_id}）`
+           : `✗ 渲染失败（见错误）`;
+  const errEl = document.getElementById('error');
+  if (state.error || (r && r.ok === false)) {
+    errEl.hidden = false;
+    errEl.textContent = (state.error && state.error.message) || (r && r.error) || '';
+  } else errEl.hidden = true;
+  document.getElementById('selectBtn').disabled = state.stage === 'generating';
+}
+
+function renderEvents(events) {
+  if (!events.length) return;
+  const el = document.getElementById('events');
+  if (el.querySelector('.dim')) el.innerHTML = '';
+  for (const ev of events.slice(-30)) {
+    const div = document.createElement('div');
+    const data = ev.data && Object.keys(ev.data).length
+      ? ' ' + JSON.stringify(ev.data) : '';
+    div.innerHTML = `<b>#${ev.seq} ${ev.type}</b><span class="dim"> ${ev.at}${data}</span>`;
+    el.appendChild(div);
+  }
+  el.scrollTop = el.scrollHeight;
+}
+
+async function poll() {
+  try {
+    const res = await api('/api/events?cursor=' + cursor);
+    cursor = res.cursor;
+    renderState(res.state);
+    renderEvents(res.events);
+  } catch (e) {
+    document.getElementById('meta').textContent = '轮询失败：' + e.message;
+  }
+}
+
+async function loadTemplates() {
+  try {
+    const res = await api('/api/templates?all=1');
+    const sel = document.getElementById('tplSelect');
+    sel.innerHTML = '';
+    for (const t of res.templates) {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = `${t.name}（${t.id}${t.internal ? ' · internal' : ''}）`;
+      sel.appendChild(opt);
+    }
+    if (res.invalid.length)
+      document.getElementById('devResult').textContent =
+        '⚠ 校验未通过的模板：' + res.invalid.map(i => i.id).join(', ');
+  } catch (e) {
+    document.getElementById('devResult').textContent = '模板列表加载失败：' + e.message;
+  }
+}
+
+document.getElementById('selectBtn').addEventListener('click', async () => {
+  const id = document.getElementById('tplSelect').value;
+  document.getElementById('devResult').textContent = '提交选择 ' + id + '…';
+  try {
+    const res = await api('/api/template/select', { method: 'POST', body: { template_id: id } });
+    document.getElementById('devResult').textContent =
+      `已提交（${res.event_type} #${res.event_seq}）→ 阶段 ${res.stage}。Agent 的 wait_for_event 应已收到。`;
+  } catch (e) {
+    document.getElementById('devResult').textContent = '选择失败：' + e.message;
+  }
+  poll();
+});
+
+document.getElementById('doneBtn').addEventListener('click', async () => {
+  try {
+    const res = await api('/api/editing-done', { method: 'POST', body: {} });
+    document.getElementById('devResult').textContent = `已通知 Agent（editing_done #${res.event_seq}）。`;
+  } catch (e) {
+    document.getElementById('devResult').textContent = '失败：' + e.message;
+  }
+  poll();
+});
+
+if (token) { loadTemplates(); poll(); setInterval(poll, 1500); }
+</script>
+</body>
+</html>

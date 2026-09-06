@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "id": "rendercv-harvard",
+  "name": "RenderCV · Harvard",
+  "description": "原版纯黑白版式、居中分节标题与 XCharter 衬线正文。",
+  "tags": [
+    "英文",
+    "纯黑白",
+    "单栏",
+    "衬线"
+  ],
+  "internal": false,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "src/rendercv/renderer/rendercv_typst/lib.typ"
+  },
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "en"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "en": {
+      "latin": [
+        "XCharter",
+        "Font Awesome 7 Free",
+        "Font Awesome 7 Brands"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.png",
+  "gallery_language": "en",
+  "gallery_order": 2,
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "examples/John_Doe_HarvardTheme_CV.pdf",
+    "source_file": "preview-upstream.pdf",
+    "source_sha256": "70deb6fa861b924b1fc02534790217eda5f7ef496a087b177dc6e3edf9dbb538",
+    "file": "preview-upstream.png",
+    "sha256": "c022e21cac833bd31032c14e9f104dce6f0c0d54753040a56c9fbc8afe3a2758",
+    "page": 1,
+    "conversion": "First page of the unchanged upstream PDF, rasterized with pdftoppm at 1800px"
+  },
+  "color_mode": "monochrome",
+  "implementation": "upstream-adapter",
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/lib.typ",
+      "sha256": "cf601592153cee809a7369a0414e1e04954f3baad810eda1a3f78d349915e72b"
+    },
+    {
+      "path": "upstream/original/theme.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/examples/harvard.typ",
+      "sha256": "15e768972e980cb95caaef5868769d8152306aea7bc4a61256535487b7361572"
+    }
+  ],
+  "font_policy": "upstream-original"
+}

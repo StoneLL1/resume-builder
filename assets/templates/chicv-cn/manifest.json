@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "id": "chicv-cn",
+  "name": "Chi CV · 中文版",
+  "description": "原版中文字体配置与紧凑单栏，清晰易读。",
+  "tags": [
+    "中文",
+    "单栏",
+    "上游原版"
+  ],
+  "internal": false,
+  "gallery_language": "zh",
+  "gallery_order": 2,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/JinBridger/chicv-cn",
+    "commit": "ecc6e73c9588c601dac462c7fd105c7d0b940746",
+    "path": "template/cv.typ"
+  },
+  "implementation": "upstream-adapter",
+  "license": {
+    "name": "NOASSERTION",
+    "file": "LICENSE-STATUS.md",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "zh"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "zh": {
+      "latin": [
+        "Linux Biolinum O"
+      ],
+      "cjk": [
+        "Noto Serif CJK SC"
+      ]
+    }
+  },
+  "preview": "preview-upstream.png",
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/JinBridger/chicv-cn",
+    "commit": "ecc6e73c9588c601dac462c7fd105c7d0b940746",
+    "path": "cv.png",
+    "source_file": "preview-upstream.png",
+    "source_sha256": "a3ecfcadbc79597865cb10934b3f55eca35cddda8b024085aa6096c94535f22c",
+    "file": "preview-upstream.png",
+    "sha256": "a3ecfcadbc79597865cb10934b3f55eca35cddda8b024085aa6096c94535f22c"
+  },
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "template/cv.typ",
+      "sha256": "bc1b04574d912ccec05558b4d6580255c79d046d22654eef782a48d224124539"
+    }
+  ],
+  "font_policy": "upstream-original"
+}

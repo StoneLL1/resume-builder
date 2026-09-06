@@ -1,0 +1,33 @@
+--- src/lib.typ
++++ upstream/layout.typ
+@@ -14,6 +14,7 @@
+ ) = {
+   let resume-header(
+     author: "",
++    contacts-display: none,
+     profile-image: none,
+     basic-info: (),
+     telephone: "",
+@@ -24,12 +25,7 @@
+     location: "",
+     body,
+   ) = {
+-    set document(
+-      author: author,
+-      title: author + "-个人简历",
+-      date: datetime.today(),
+-    )
+-
++  
+     // 基础样式
+     set page(
+       margin: (x: 1.2cm * element-spaciness, y: 1.2cm * element-spaciness), // 页边距
+@@ -141,7 +137,7 @@
+           basic-info.join(separator)
+           linebreak()
+         }
+-        contacts.join(separator)
++        if contacts-display != none { contacts-display.join(separator) } else { contacts.join(separator) }
+       },
+     )
+ 

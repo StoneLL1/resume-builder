@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "id": "qianxi",
+  "name": "cv.typ · Qianxi",
+  "description": "文楷正文、图标分节与居中抬头，沿用原版中文样式。",
+  "tags": [
+    "中文",
+    "单栏",
+    "上游原版"
+  ],
+  "internal": false,
+  "gallery_language": "zh",
+  "gallery_order": 5,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/qianxi0410/cv.typ",
+    "commit": "05b6a604ae3457f977ba8464f44f340b80da0456",
+    "path": "template.typ"
+  },
+  "implementation": "upstream-adapter",
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "zh"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "zh": {
+      "latin": [
+        "LXGW WenKai"
+      ],
+      "cjk": [
+        "LXGW WenKai"
+      ]
+    }
+  },
+  "preview": "preview-upstream.png",
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/qianxi0410/cv.typ",
+    "commit": "05b6a604ae3457f977ba8464f44f340b80da0456",
+    "path": "main.pdf",
+    "source_file": "preview-upstream.pdf",
+    "source_sha256": "b9562c3ed96c3cfe6490d1a10bd5f295295411230b2e0c23229ff8354734c48b",
+    "file": "preview-upstream.png",
+    "sha256": "009157d5786a045d3bd936875ae96a1ce56dacbb2327edef0232e6501f59caea",
+    "page": 1,
+    "conversion": "First page of the unchanged upstream PDF, rasterized with pdftoppm at 1800px"
+  },
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "template.typ",
+      "sha256": "fa6c2abbb11248c755fb08de0c3bfa61bc1d93c2befc9ced86fbd6b92843fed9"
+    }
+  ],
+  "font_policy": "upstream-original"
+}

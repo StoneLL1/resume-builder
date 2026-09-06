@@ -1,0 +1,5 @@
+* text=auto
+*.sh text eol=lf
+
+# Preserve exact bytes of bundled assets and pinned upstream snapshots.
+assets/** -text

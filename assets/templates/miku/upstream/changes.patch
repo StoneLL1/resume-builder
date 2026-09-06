@@ -1,0 +1,19 @@
+--- template.typ
++++ upstream/layout.typ
+@@ -8,7 +8,7 @@
+ #let info = author => align(center)[
+   #author.email \
+   #author.phone \
+-  #author.home · #author.github · #author.linkin
++  #(author.home, author.github, author.linkin).filter(x => x != [] and x != "").join(" · ")
+ ]
+ 
+ // You don't really need to change the content below
+@@ -20,7 +20,6 @@
+   name: ""
+ ), body) = {
+   // Set the document's basic properties.
+-  set document(author: author.name, title: title)
+   set page(
+     numbering: "1 / 1",
+     number-align: center,

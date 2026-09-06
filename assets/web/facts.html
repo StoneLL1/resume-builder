@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>事实核对 · Resume Builder</title>
+<link rel="stylesheet" href="/assets/app.css" />
+</head>
+<body>
+<div class="fact-shell">
+
+  <!-- ═══ 顶部工具栏（与编辑页同构） ═══ -->
+  <div class="toolbar" role="toolbar" aria-label="简历操作">
+    <span class="brand"><span class="brand-mark">简</span>Resume Builder</span>
+    <span class="spacer"></span>
+    <div class="tabs" role="tablist" aria-label="工作模式">
+      <button role="tab" aria-selected="false" type="button" onclick="location.href='/editor'">编辑</button>
+      <button role="tab" aria-selected="true" class="active" type="button">事实核对</button>
+    </div>
+  </div>
+
+  <!-- ═══ 主体 ═══ -->
+  <div class="fact-body">
+    <div class="fact-wrap">
+      <div class="fact-title" style="margin-bottom: 8px">
+        <h1>事实核对</h1>
+        <p>简历里每条表述的来源与确认状态，来自 Agent 维护的 claim-map（本页只读）。状态变化请回到对话让 Agent 更新。</p>
+      </div>
+
+      <div class="banner banner-warn hidden" id="noToken">缺少令牌：请从 Agent 给出的带 ?token= 的链接打开本页。</div>
+      <div class="banner banner-error hidden" id="loadError"></div>
+
+      <!-- 状态统计 + 筛选 -->
+      <div class="fact-stats" id="factStats" role="group" aria-label="按状态筛选"></div>
+
+      <!-- 三列表格 -->
+      <table class="fact-table">
+        <thead>
+          <tr>
+            <th style="width: 48%">简历内容</th>
+            <th style="width: 34%">来源</th>
+            <th style="width: 18%">状态</th>
+          </tr>
+        </thead>
+        <tbody id="factBody"></tbody>
+      </table>
+
+      <div class="fact-empty hidden" id="factEmpty"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/app.js"></script>
+<script>
+/* ═══ 事实核对页（Batch 7） ═══
+   解析展示 V1 格式 claim-map（服务端 /api/claim-map 已完成解析）。
+   只读：不提供任何修改接口；状态不随内容修改自动变化；也不阻止导出。 */
+
+let claimMap = null;
+let filter = 'all';
+
+const STATUS_META = {
+  ok:    { label: '已确认',   cls: 'st-ok' },
+  wait:  { label: '待确认',   cls: 'st-wait' },
+  block: { label: '缺失阻塞', cls: 'st-block' },
+  skip:  { label: '已省略',   cls: 'st-skip' },
+};
+const FILTER_LABEL = { all: '全部', ok: '已确认', wait: '待确认', block: '缺失阻塞', skip: '已省略' };
+
+function renderStats() {
+  const rows = claimMap ? claimMap.rows : [];
+  const counts = { all: rows.length };
+  for (const k of ['ok', 'wait', 'block', 'skip']) counts[k] = claimMap ? (claimMap.counts[k] || 0) : 0;
+  $('#factStats').innerHTML = ['all', 'ok', 'wait', 'block', 'skip'].map(k => `
+    <button class="fstat ${filter === k ? 'active' : ''}" data-filter="${k}" aria-pressed="${filter === k}" type="button">
+      <span class="fs-num">${counts[k]}</span>
+      <span class="fs-label">${FILTER_LABEL[k]}</span>
+    </button>`).join('');
+}
+
+function renderRows() {
+  const rows = claimMap ? claimMap.rows : [];
+  const visible = rows.filter(r => filter === 'all' || r.status === filter);
+  const body = $('#factBody');
+  body.innerHTML = visible.map((r, i) => {
+    const meta = r.status ? STATUS_META[r.status] : null;
+    const badge = meta
+      ? `<span class="st ${meta.cls}">${meta.label}</span>`
+      : `<span class="st st-skip" title="${esc(r.raw_status || '')}">${esc(r.raw_status || '未知状态')}</span>`;
+    return `
+      <tr>
+        <td class="col-claim">${esc(r.claim)}</td>
+        <td class="col-src">${esc(r.source)}</td>
+        <td>${badge}</td>
+      </tr>`;
+  }).join('');
+  const empty = $('#factEmpty');
+  empty.classList.toggle('hidden', visible.length > 0);
+  if (!visible.length) {
+    empty.textContent = rows.length
+      ? '当前筛选下没有条目。'
+      : (claimMap && claimMap.exists === false
+        ? '还没有 claim-map：Agent 在写作阶段会生成 work/claim-map.md，之后这里会自动展示。'
+        : '当前筛选下没有条目。');
+  }
+}
+
+$('#factStats').addEventListener('click', e => {
+  const btn = e.target.closest('.fstat');
+  if (!btn) return;
+  filter = btn.dataset.filter;
+  renderStats();
+  renderRows();
+});
+
+async function load() {
+  if (warnNoToken('事实核对')) return;
+  try {
+    claimMap = await api('/api/claim-map');
+    if (!claimMap.exists) {
+      const el = $('#loadError');
+      /* 不算错误：展示空态即可 */
+    }
+    renderStats();
+    renderRows();
+  } catch (e) {
+    const el = $('#loadError');
+    el.classList.remove('hidden');
+    el.textContent = 'claim-map 读取失败：' + e.message;
+  }
+}
+
+load();
+</script>
+</body>
+</html>

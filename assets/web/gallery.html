@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>选模板 · Resume Builder</title>
+<link rel="stylesheet" href="/assets/app.css" />
+</head>
+<body>
+
+<header class="appbar">
+  <div class="container appbar-inner">
+    <span class="brand"><span class="brand-mark">简</span>Resume Builder</span>
+    <nav>
+      <a href="/facts" class="navlink">事实核对</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="container gallery-hero">
+    <h1>先选一套版式，再开始排版。</h1>
+    <p class="lead" id="heroLead">中文与英文各 9 套模板。选好版式后，Agent 会继续精修与排版检查。</p>
+    <div class="banner banner-warn hidden" id="noToken" style="margin-top:16px;text-align:left">
+      缺少令牌：请从 Agent 给出的带 ?token= 的链接打开本页。
+    </div>
+  </section>
+
+  <section class="container" aria-label="模板列表">
+    <div class="gallery-language-bar">
+      <div class="language-switch" role="tablist" aria-label="简历模板语言">
+        <span class="language-switch-glass" aria-hidden="true"></span>
+        <button id="tabZh" class="language-tab" type="button" role="tab" aria-selected="true" aria-controls="tplPanel" data-language="zh">中文 <span lang="en">Chinese</span></button>
+        <button id="tabEn" class="language-tab" type="button" role="tab" aria-selected="false" aria-controls="tplPanel" tabindex="-1" data-language="en">英文 <span lang="en">English</span></button>
+      </div>
+      <p id="languageSummary" class="language-summary" aria-live="polite"></p>
+    </div>
+    <div id="tplError" class="banner banner-error hidden" style="margin-bottom:20px"></div>
+    <div id="tplInvalid" class="banner banner-warn hidden" style="margin-bottom:20px"></div>
+    <div id="tplPanel" role="tabpanel" aria-labelledby="tabZh">
+    <div class="gallery-grid" id="tplGrid" aria-label="模板卡片；点预览可放大，点按钮选中模板">
+      <div style="grid-column:1/-1;color:var(--muted);padding:40px 0;text-align:center" id="tplLoading">正在加载模板…</div>
+    </div>
+    </div>
+  </section>
+</main>
+
+<footer class="gallery-footbar">
+  <div class="container inner">
+    <span class="selected-name" id="selectedName" aria-live="polite"><span class="sel-none">尚未选择模板</span></span>
+    <button class="btn btn-primary" id="startBtn" disabled>用这套模板开始</button>
+  </div>
+</footer>
+
+<dialog class="tpl-dialog" id="tplDialog" aria-labelledby="tplDialogTitle" aria-describedby="tplDialogDesc">
+  <div class="tpl-dialog-shell">
+    <header class="tpl-dialog-head">
+      <div>
+        <h2 id="tplDialogTitle">模板大图</h2>
+        <p id="tplDialogMeta"></p>
+      </div>
+      <button class="btn btn-secondary btn-sm" id="tplDialogClose" type="button" aria-label="关闭模板大图">关闭</button>
+    </header>
+    <div class="tpl-dialog-stage">
+      <button class="tpl-dialog-nav" id="tplDialogPrev" type="button" aria-label="上一套模板">‹</button>
+      <div class="tpl-dialog-image-frame" id="tplDialogImageFrame"><img id="tplDialogImage" alt="" /></div>
+      <button class="tpl-dialog-nav" id="tplDialogNext" type="button" aria-label="下一套模板">›</button>
+    </div>
+    <footer class="tpl-dialog-foot">
+      <p id="tplDialogDesc"></p>
+      <button class="btn btn-accent" id="tplDialogSelect" type="button">选中这套模板</button>
+    </footer>
+  </div>
+</dialog>
+
+<script src="/assets/app.js"></script>
+<script>
+/* ═══ 模板画廊（Batch 5） ═══
+   真实渲染预览来自 /api/templates（每套模板的 preview.png，由同一份
+   脱敏示例内容渲染）。确认后 POST /api/template/select → 阶段
+   generating → 跳转等待页（不直接进编辑器）。 */
+
+let templates = [];
+let selected = null;
+let submitting = false;
+let previewing = null;
+let activeLanguage = 'zh';
+let resumeLanguage = 'zh';
+const selections = { zh: null, en: null };
+const visibleTemplates = () => templates.filter(t => t.gallery_language === activeLanguage);
+const choiceKey = 'rb-gallery-' + RB.token;
+const licenseLabel = t => t.license === 'NOASSERTION' ? '上游许可未声明' : t.license || '';
+
+function rememberChoice() {
+  try { sessionStorage.setItem(choiceKey, JSON.stringify({ language: activeLanguage, selections })); } catch (_) { /* Browsing also works without storage. */ }
+}
+
+function switchLanguage(language, focus = false) {
+  if (submitting) return;
+  activeLanguage = language;
+  selected = selections[language];
+  $('.language-switch').classList.toggle('is-english', language === 'en');
+  $$('.language-tab').forEach(tab => {
+    const on = tab.dataset.language === language;
+    tab.setAttribute('aria-selected', String(on));
+    tab.tabIndex = on ? 0 : -1;
+    if (on && focus) tab.focus();
+  });
+  $('#tplPanel').setAttribute('aria-labelledby', language === 'zh' ? 'tabZh' : 'tabEn');
+  $('#languageSummary').textContent = `${language === 'zh' ? '中文' : '英文'}模板 · ${visibleTemplates().length} 套${language === 'en' ? ' · 含纯黑白版式' : ''}`;
+  renderGrid();
+  applySelection(selected, true);
+}
+
+function applySelection(id, quiet) {
+  selected = id;
+  selections[activeLanguage] = id;
+  rememberChoice();
+  $$('.tpl-card', $('#tplGrid')).forEach(card => {
+    const on = card.dataset.id === id;
+    card.classList.toggle('selected', on);
+    const pick = $('.tpl-pick', card);
+    pick.setAttribute('aria-pressed', on);
+    pick.textContent = on ? '已选中' : '选中这套';
+  });
+  const t = templates.find(x => x.id === id);
+  $('#selectedName').innerHTML = t
+    ? `已选 <strong>${esc(t.name)}</strong>${t.tags.length ? ' · ' + esc(t.tags.join(' / ')) : ''}`
+    : '<span class="sel-none">尚未选择模板</span>';
+  $('#startBtn').disabled = !t || submitting;
+  if (t && !quiet) toast('已选中「' + t.name + '」，可在底部确认开始');
+}
+
+function showPreview(id) {
+  const t = templates.find(x => x.id === id);
+  if (!t) return;
+  previewing = id;
+  $('#tplDialogTitle').textContent = t.name;
+  $('#tplDialogMeta').textContent = [t.tags.join(' · '), licenseLabel(t)].filter(Boolean).join('  ·  ');
+  $('#tplDialogDesc').textContent = t.description;
+  const img = $('#tplDialogImage');
+  img.src = RB.authedUrl(t.preview_url);
+  img.alt = t.name + ' 模板完整预览';
+  $('#tplDialogImageFrame').classList.toggle('preview-right-half', t.preview_source?.viewport === 'right-half');
+  $('#tplDialogSelect').textContent = selected === id ? '这套已选中' : '选中这套模板';
+  $('#tplDialogSelect').disabled = selected === id;
+  if (!$('#tplDialog').open) $('#tplDialog').showModal();
+}
+
+function stepPreview(delta) {
+  const visible = visibleTemplates();
+  const index = visible.findIndex(t => t.id === previewing);
+  if (index < 0) return;
+  showPreview(visible[(index + delta + visible.length) % visible.length].id);
+}
+
+function renderGrid() {
+  const grid = $('#tplGrid');
+  const visible = visibleTemplates();
+  if (!visible.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);padding:40px 0;text-align:center">'
+      + '当前没有可用的正式模板；请让 Agent 检查模板契约和预览文件。</div>';
+    return;
+  }
+  grid.innerHTML = visible.map(t => `
+    <article class="tpl-card" data-id="${esc(t.id)}">
+      <span class="tpl-check" aria-hidden="true">${ICONS.check}</span>
+      <button class="tpl-preview ${t.preview_source?.viewport === 'right-half' ? 'preview-right-half' : ''}" data-action="preview" type="button" aria-label="放大查看 ${esc(t.name)}">
+        <img src="${esc(RB.authedUrl(t.preview_url))}" alt="${esc(t.name)} 模板预览" loading="lazy" />
+        <span class="tpl-zoom-hint" aria-hidden="true">查看完整大图</span>
+      </button>
+      <span class="tpl-name">${esc(t.name)}</span>
+      <span class="tpl-desc">${esc(t.description)}</span>
+      <span class="tpl-tags">${t.tags.map(g => `<span class="tag">${esc(g)}</span>`).join('')}</span>
+      <span class="tpl-license" title="${esc(t.upstream ? t.upstream.repo : '本地参考模板')}">${esc(licenseLabel(t))}${t.upstream ? ' · ' + esc(t.upstream.repo) : ''}</span>
+      <button class="btn btn-secondary tpl-pick" data-action="select" type="button" aria-pressed="false">选中这套</button>
+    </article>`).join('');
+
+  /* 选择按钮之间可用方向键快速浏览；预览按钮独立负责大图。 */
+  const cards = $$('.tpl-card', grid);
+  grid.onkeydown = e => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    const current = document.activeElement.closest('.tpl-card');
+    const idx = cards.indexOf(current);
+    if (idx < 0) return;
+    e.preventDefault();
+    const cols = window.getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+    let next = idx;
+    if (e.key === 'ArrowRight') next = idx + 1;
+    if (e.key === 'ArrowLeft') next = idx - 1;
+    if (e.key === 'ArrowDown') next = idx + cols;
+    if (e.key === 'ArrowUp') next = idx - cols;
+    if (next >= 0 && next < cards.length) {
+      applySelection(cards[next].dataset.id, true);
+      $('.tpl-pick', cards[next]).focus();
+    }
+  };
+  grid.onclick = e => {
+    const card = e.target.closest('.tpl-card');
+    if (!card) return;
+    if (e.target.closest('[data-action="preview"]')) showPreview(card.dataset.id);
+    if (e.target.closest('[data-action="select"]')) applySelection(card.dataset.id);
+  };
+  if (selected) applySelection(selected, true);
+}
+
+async function load() {
+  if (warnNoToken('选模板')) { $('#tplLoading').textContent = ''; return; }
+  try {
+    const res = await api('/api/templates');
+    templates = res.templates;
+    resumeLanguage = res.language_mode || 'zh';
+    $('#heroLead').textContent = '按简历语言浏览版式，点击预览查看完整效果。选好后，Agent 会继续精修与检查。';
+    $('#tplLoading').remove();
+    const previous = templates.find(t => t.id === res.selected_template);
+    if (previous) selections[previous.gallery_language] = previous.id;
+    let saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem(choiceKey)); } catch (_) { /* Ignore stale browser state. */ }
+    for (const lang of ['zh', 'en']) {
+      const id = saved?.selections?.[lang];
+      if (templates.some(t => t.id === id && t.gallery_language === lang)) selections[lang] = id;
+    }
+    const initial = ['zh', 'en'].includes(saved?.language) ? saved.language : previous ? previous.gallery_language : resumeLanguage === 'en' ? 'en' : 'zh';
+    switchLanguage(initial);
+    if (res.invalid.length) {
+      const el = $('#tplInvalid');
+      el.classList.remove('hidden');
+      el.textContent = '⚠ 有 ' + res.invalid.length + ' 套模板未通过契约校验，已从画廊隐藏（'
+        + res.invalid.map(i => i.id).join('、') + '）。详情见 Agent 对话。';
+    }
+  } catch (e) {
+    $('#tplLoading')?.remove();
+    const el = $('#tplError');
+    el.classList.remove('hidden');
+    el.textContent = '模板列表加载失败：' + e.message;
+  }
+}
+
+$('#startBtn').addEventListener('click', async () => {
+  if (!selected || submitting) return;
+  submitting = true;
+  $('#startBtn').disabled = true;
+  $('#startBtn').textContent = '已提交，正在进入生成…';
+  try {
+    const languageMode = activeLanguage;
+    await api('/api/template/select', { method: 'POST', body: { template_id: selected, language_mode: languageMode } });
+    location.href = '/waiting';
+  } catch (e) {
+    submitting = false;
+    $('#startBtn').disabled = false;
+    $('#startBtn').textContent = '用这套模板开始';
+    const el = $('#tplError');
+    el.classList.remove('hidden');
+    el.textContent = '选择失败：' + e.message + (e.message.includes('不匹配') ? '\n可回到对话让 Agent 调整语言/页数设置，或换一套模板。' : '');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+
+$('#tplDialogClose').addEventListener('click', () => $('#tplDialog').close());
+$$('.language-tab').forEach(tab => tab.addEventListener('click', () => switchLanguage(tab.dataset.language)));
+$('.language-switch').addEventListener('keydown', e => {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+  e.preventDefault();
+  const language = e.key === 'Home' ? 'zh' : e.key === 'End' ? 'en' : activeLanguage === 'zh' ? 'en' : 'zh';
+  switchLanguage(language, true);
+});
+$('#tplDialogPrev').addEventListener('click', () => stepPreview(-1));
+$('#tplDialogNext').addEventListener('click', () => stepPreview(1));
+$('#tplDialogSelect').addEventListener('click', () => {
+  applySelection(previewing);
+  $('#tplDialog').close();
+});
+$('#tplDialog').addEventListener('click', e => {
+  if (e.target === $('#tplDialog')) $('#tplDialog').close();
+});
+$('#tplDialog').addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') { e.preventDefault(); stepPreview(-1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); stepPreview(1); }
+});
+
+load();
+</script>
+</body>
+</html>

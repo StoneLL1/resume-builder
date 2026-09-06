@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "id": "imprecv",
+  "name": "ImpreCV",
+  "description": "黑白衬线正文、居中姓名与横线分节，沿用原版紧凑布局。",
+  "tags": [
+    "英文",
+    "单栏",
+    "衬线",
+    "紧凑"
+  ],
+  "internal": false,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/jskherman/imprecv",
+    "commit": "8d0a4c506c6871c2fa79032969d8298f352eebf7",
+    "path": "cv.typ"
+  },
+  "license": {
+    "name": "Apache-2.0",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "en"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "en": {
+      "latin": [
+        "Libertinus Serif"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.png",
+  "gallery_language": "en",
+  "gallery_order": 6,
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/jskherman/imprecv",
+    "commit": "8d0a4c506c6871c2fa79032969d8298f352eebf7",
+    "path": "assets/thumbnail.1.png",
+    "source_file": "preview-upstream.png",
+    "source_sha256": "cca0183a34b1e14d7fe0bc3a8c5cf55650bc462955927ffc085000fc2aa385a8",
+    "file": "preview-upstream.png",
+    "sha256": "cca0183a34b1e14d7fe0bc3a8c5cf55650bc462955927ffc085000fc2aa385a8"
+  },
+  "implementation": "upstream-adapter",
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "cv.typ",
+      "sha256": "3b5e0d7756a3d5d4d5ef8afb03baaa45236f29cedf131a0af9f49cb275cf35ef"
+    }
+  ],
+  "font_policy": "upstream-original",
+  "color_mode": "color"
+}

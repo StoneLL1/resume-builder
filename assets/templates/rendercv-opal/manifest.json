@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "id": "rendercv-opal",
+  "name": "RenderCV · Opal",
+  "description": "青绿色抬头与居中分节标题，采用原版 Lato 字体。",
+  "tags": [
+    "英文",
+    "青绿",
+    "单栏",
+    "无衬线"
+  ],
+  "internal": false,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "src/rendercv/renderer/rendercv_typst/lib.typ"
+  },
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "en"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "en": {
+      "latin": [
+        "Lato",
+        "Font Awesome 7 Free",
+        "Font Awesome 7 Brands"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.png",
+  "gallery_language": "en",
+  "gallery_order": 4,
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "examples/John_Doe_OpalTheme_CV.pdf",
+    "source_file": "preview-upstream.pdf",
+    "source_sha256": "e6e2d373698328521264049586d3c976d0056472b0f9bb2b521dfe5667cefc4f",
+    "file": "preview-upstream.png",
+    "sha256": "df8c8e9e4d6e12728f7940298e3714525c329e0173db54a838a9a29793dee34a",
+    "page": 1,
+    "conversion": "First page of the unchanged upstream PDF, rasterized with pdftoppm at 1800px"
+  },
+  "implementation": "upstream-adapter",
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/lib.typ",
+      "sha256": "cf601592153cee809a7369a0414e1e04954f3baad810eda1a3f78d349915e72b"
+    },
+    {
+      "path": "upstream/original/theme.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/examples/opal.typ",
+      "sha256": "a0564a2a987e85e39a517f06b4728962d7cd392ad73c3499f24dae736d74d93d"
+    }
+  ],
+  "font_policy": "upstream-original",
+  "color_mode": "color"
+}

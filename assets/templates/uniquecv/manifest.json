@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "id": "uniquecv",
+  "name": "Unique CV",
+  "description": "蓝色分节线、衬线正文和表格对齐的经历条目。",
+  "tags": [
+    "中文",
+    "单栏",
+    "上游原版"
+  ],
+  "internal": false,
+  "gallery_language": "zh",
+  "gallery_order": 6,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/gaoachao/uniquecv-typst",
+    "commit": "17927a9f7f671c4436e024389bb50847d14553b1",
+    "path": "template.typ"
+  },
+  "implementation": "upstream-adapter",
+  "license": {
+    "name": "NOASSERTION",
+    "file": "LICENSE-STATUS.md",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "zh"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "zh": {
+      "latin": [
+        "New Computer Modern",
+        "Font Awesome 6 Free Solid",
+        "Font Awesome 6 Brands"
+      ],
+      "cjk": [
+        "Source Han Serif SC",
+        "KaiTi"
+      ]
+    }
+  },
+  "preview": "preview-upstream.png",
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/gaoachao/uniquecv-typst",
+    "commit": "17927a9f7f671c4436e024389bb50847d14553b1",
+    "path": "main.png",
+    "source_file": "preview-upstream.png",
+    "source_sha256": "01c61e2a851c3faf1c9e41848ab6d20a83fcec948837ffa85b16f82ff69ea0fa",
+    "file": "preview-upstream.png",
+    "sha256": "01c61e2a851c3faf1c9e41848ab6d20a83fcec948837ffa85b16f82ff69ea0fa"
+  },
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "template.typ",
+      "sha256": "aab66ca32661dfe630701bdec6b615b4e63d5fffe3eb54540a9f4b93980ee19e"
+    }
+  ],
+  "font_policy": "upstream-original"
+}

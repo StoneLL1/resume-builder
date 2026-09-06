@@ -1,0 +1,105 @@
+--- template.typ
++++ upstream/layout.typ
+@@ -53,8 +53,7 @@
+ }
+ 
+ 
+-#let cv(name: "", phone: "", email: "", birthday: "", website: "", avatar: "", body) = {
+-  set document(title: name)
++#let cv(name: "", phone: "", email: "", birthday: "", website: "", avatar: "", contacts: none, body) = {
+   set page(paper: "a4", margin: (x: 2.1cm, y: 1.2cm))
+   set text(font: "LXGW WenKai", 0.9em, weight: "regular");
+   set par(justify: true, linebreaks: "optimized")
+@@ -72,7 +71,8 @@
+     // 其他信息
+     #set text(size: 0.9em)
+     #set box(baseline: 0.1em, height: 1em)
+-    #grid(
++    #if contacts != none { contacts.join(" · ") } else {
++    grid(
+       columns: (auto, auto, auto, auto, auto, auto, auto),
+       column-gutter: 0.8em,
+       link("")[
+@@ -101,13 +101,14 @@
+         #url(website)
+       ]
+     )
++    }
+   ]
+   body
+ }
+ 
+ // 教育背景
+-#let educations(educations) = {
+-  section-header(title: "教育背景", icon: "./icons/education.svg")
++#let educations(educations, show-section: true) = {
++  if show-section { section-header(title: "教育背景", icon: "./icons/education.svg") }
+   set text(1.05em)
+ 
+   for education in educations {
+@@ -127,8 +128,8 @@
+ }
+ 
+ // 项目经历
+-#let projects(projects) = {
+-  section-header(title: "项目经历", icon: "./icons/project.svg")
++#let projects(projects, show-section: true) = {
++  if show-section { section-header(title: "项目经历", icon: "./icons/project.svg") }
+ 
+   set list(indent: 1em, tight: true)
+ 
+@@ -147,8 +148,8 @@
+         text(weight: "black", project.desc)
+       }
+ 
+-      #for point in project.points.map(x => "[" + x + "]")  {
+-        list(eval(point))
++      #for point in project.points  {
++        list(point)
+       }
+       #v(3pt)
+     ]
+@@ -156,8 +157,8 @@
+ }
+ 
+ // 实习经历
+-#let internships(internships) = {
+-  section-header(title: "实习经历", icon: "./icons/internship.svg")
++#let internships(internships, show-section: true) = {
++  if show-section { section-header(title: "实习经历", icon: "./icons/internship.svg") }
+   set list(indent: 1em, tight: true)
+ 
+   for internship in internships {
+@@ -168,8 +169,8 @@
+       #h(1fr)
+       #text(weight: "thin", emph(internship.date))
+       
+-      #for point in internship.points.map(x => "[" + x + "]") {
+-        list(eval(point))
++      #for point in internship.points {
++        list(point)
+       }
+ 
+       #v(3pt)
+@@ -178,8 +179,8 @@
+ }
+ 
+ // 荣誉奖项
+-#let awards(awards) = {
+-  section-header(title: "荣誉奖项", icon: "./icons/award.svg")
++#let awards(awards, show-section: true) = {
++  if show-section { section-header(title: "荣誉奖项", icon: "./icons/award.svg") }
+   set list(tight: true, marker: none, body-indent: 0pt)
+ 
+   for award in awards {
+@@ -193,8 +194,8 @@
+ }
+ 
+ // 个人技能
+-#let skills(skills) = {
+-  section-header(title: "个人技能", icon: "./icons/skill.svg")
++#let skills(skills, show-section: true) = {
++  if show-section { section-header(title: "个人技能", icon: "./icons/skill.svg") }
+   set list(tight: true, marker: none, body-indent: 0pt)
+ 
+   for skill in skills {

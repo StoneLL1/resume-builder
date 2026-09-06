@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "id": "rendercv-moderncv",
+  "name": "RenderCV · ModernCV",
+  "description": "左侧日期栏、蓝色粗线分节与 Fontin 字体，沿用原版时间信息布局。",
+  "tags": [
+    "英文",
+    "日期侧栏",
+    "衬线"
+  ],
+  "internal": false,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "src/rendercv/renderer/rendercv_typst/lib.typ"
+  },
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "en"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "en": {
+      "latin": [
+        "Fontin",
+        "Font Awesome 7 Free",
+        "Font Awesome 7 Brands"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.png",
+  "gallery_language": "en",
+  "gallery_order": 1,
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "examples/John_Doe_ModerncvTheme_CV.pdf",
+    "source_file": "preview-upstream.pdf",
+    "source_sha256": "310cccc79d538814278250d2dd12dc42fe272f04f80ebe00d75743c7e161d4ca",
+    "file": "preview-upstream.png",
+    "sha256": "ce8321a260ea28d6cac26d5978134996a8c0de9bf4adcdb1e36dfa0437db5047",
+    "page": 1,
+    "conversion": "First page of the unchanged upstream PDF, rasterized with pdftoppm at 1800px"
+  },
+  "implementation": "upstream-adapter",
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/lib.typ",
+      "sha256": "cf601592153cee809a7369a0414e1e04954f3baad810eda1a3f78d349915e72b"
+    },
+    {
+      "path": "upstream/original/theme.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/examples/moderncv.typ",
+      "sha256": "193ba391e0ecefbc978934c89f1f2ba9575a6e962409a16baec96530cb0e2908"
+    }
+  ],
+  "font_policy": "upstream-original",
+  "color_mode": "color"
+}

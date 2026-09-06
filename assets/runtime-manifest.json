@@ -1,0 +1,612 @@
+{
+  "schema_version": 1,
+  "runtime_version": "2026.09.06",
+  "minimum_python": "3.10",
+  "python": {
+    "version": "3.14.7",
+    "build": "20260901",
+    "license": "Python-2.0 AND MIT",
+    "source": "https://github.com/astral-sh/python-build-standalone",
+    "platforms": {
+      "windows-x64": {
+        "filename": "cpython-3.14.7+20260901-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7%2B20260901-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+        "sha256": "ca3c33ca924dfcab3b74205a7a58a88b0255135c53f95497b26b5e60700fd66d",
+        "archive_format": "tar.gz",
+        "executable": "python/python.exe"
+      },
+      "windows-arm64": {
+        "filename": "cpython-3.14.7+20260901-aarch64-pc-windows-msvc-install_only_stripped.tar.gz",
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7%2B20260901-aarch64-pc-windows-msvc-install_only_stripped.tar.gz",
+        "sha256": "0a798034b712c34589b90192282dc45534c1fb5c01279e68d3d163df0ed49773",
+        "archive_format": "tar.gz",
+        "executable": "python/python.exe"
+      },
+      "mac-x64": {
+        "filename": "cpython-3.14.7+20260901-x86_64-apple-darwin-install_only_stripped.tar.gz",
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7%2B20260901-x86_64-apple-darwin-install_only_stripped.tar.gz",
+        "sha256": "7e151a7c9028855b61a7d6e78381f2020a1ef185281399f3b1aafc5e1c9a1a64",
+        "archive_format": "tar.gz",
+        "executable": "python/bin/python3"
+      },
+      "mac-arm64": {
+        "filename": "cpython-3.14.7+20260901-aarch64-apple-darwin-install_only_stripped.tar.gz",
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7%2B20260901-aarch64-apple-darwin-install_only_stripped.tar.gz",
+        "sha256": "4632cb1a6edad9e73d3c81b6d2e69131637d995173e3e85005df14102b0592ba",
+        "archive_format": "tar.gz",
+        "executable": "python/bin/python3"
+      }
+    }
+  },
+  "typst": {
+    "version": "0.15.1",
+    "license": "Apache-2.0",
+    "source": "https://github.com/typst/typst",
+    "platforms": {
+      "windows-x64": {
+        "filename": "typst-x86_64-pc-windows-msvc.zip",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-pc-windows-msvc.zip",
+        "sha256": "19ce3551153c2fe7ee9fa2f95208310c8f4d3209fedb699e0333faf8913f6736",
+        "archive_format": "zip",
+        "executable_name": "typst.exe"
+      },
+      "windows-arm64": {
+        "filename": "typst-aarch64-pc-windows-msvc.zip",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-aarch64-pc-windows-msvc.zip",
+        "sha256": "4ab28e1b71ec3184d38d580ab797f499b6770d952b6b19167be5cea5c2662e14",
+        "archive_format": "zip",
+        "executable_name": "typst.exe"
+      },
+      "mac-x64": {
+        "filename": "typst-x86_64-apple-darwin.tar.xz",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-apple-darwin.tar.xz",
+        "sha256": "7f9fdd9584866245de9a79e0add8f9236fae6f40a8a45e2c4771ccc14db4e0fa",
+        "archive_format": "tar.xz",
+        "executable_name": "typst"
+      },
+      "mac-arm64": {
+        "filename": "typst-aarch64-apple-darwin.tar.xz",
+        "url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-aarch64-apple-darwin.tar.xz",
+        "sha256": "48f62ed034aa3a7978309579ac6ca00045e2ef0da73114e8af27cfd8e74dc05a",
+        "archive_format": "tar.xz",
+        "executable_name": "typst"
+      }
+    }
+  },
+  "fonts": {
+    "google_fonts_commit": "5e35378e6bda803962ee6fd257e444a7d459660d",
+    "files": [
+      {
+        "filename": "NotoSansSC[wght].ttf",
+        "family": "Noto Sans SC",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf",
+        "sha256": "a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/notosanssc/OFL.txt"
+      },
+      {
+        "filename": "NotoSerifSC[wght].ttf",
+        "family": "Noto Serif SC",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/notoserifsc/NotoSerifSC%5Bwght%5D.ttf",
+        "sha256": "050080d9255a86808f2945bffac582b31ef32bc36411ce29563b4961670c66f9",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/notoserifsc/OFL.txt"
+      },
+      {
+        "filename": "Raleway[wght].ttf",
+        "family": "Raleway",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/raleway/Raleway%5Bwght%5D.ttf",
+        "sha256": "8bbcc3eb8275c388f4bcd998832f8a4b943eadbaf6a595205312774b5951aefb",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/raleway/OFL.txt"
+      },
+      {
+        "filename": "Roboto[wdth,wght].ttf",
+        "family": "Roboto",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/roboto/Roboto%5Bwdth,wght%5D.ttf",
+        "sha256": "d7598e12c5dbef095ff8272cfc55da0250bd07fbdecbac8a530b9b277872a134",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/roboto/OFL.txt"
+      },
+      {
+        "filename": "Inter[opsz,wght].ttf",
+        "family": "Inter",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/inter/Inter%5Bopsz,wght%5D.ttf",
+        "sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/inter/OFL.txt"
+      },
+      {
+        "filename": "SourceSans3[wght].ttf",
+        "family": "Source Sans 3",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/sourcesans3/SourceSans3%5Bwght%5D.ttf",
+        "sha256": "042fe2cc0b933e328410d7acbd0aa6a1873dca5aef81875f4bc214b08825c7b9",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/sourcesans3/OFL.txt"
+      },
+      {
+        "filename": "EBGaramond[wght].ttf",
+        "family": "EB Garamond",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ebgaramond/EBGaramond%5Bwght%5D.ttf",
+        "sha256": "ef9512f92f6d579e5dc75af59a5a4b1b8b47d2eda89e00b954d44520e5369027",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ebgaramond/OFL.txt"
+      },
+      {
+        "filename": "EBGaramond-Italic[wght].ttf",
+        "family": "EB Garamond",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ebgaramond/EBGaramond-Italic%5Bwght%5D.ttf",
+        "sha256": "bba2c4499c93c9612b90b9825d32b07da52fce2fe57562a1eb6b833553f93c4e",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ebgaramond/OFL.txt"
+      },
+      {
+        "filename": "Lato-Regular.ttf",
+        "family": "Lato",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/lato/Lato-Regular.ttf",
+        "sha256": "d636e4683231f931eda222d588e944d082bfd3bdba02f928bee461c0f185b251",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/lato/OFL.txt"
+      },
+      {
+        "filename": "Lato-Bold.ttf",
+        "family": "Lato",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/lato/Lato-Bold.ttf",
+        "sha256": "8a0aace75d33794eece4b28187bfc1df0bbd2888b5d8a56e01788c8d65d16be1",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/lato/OFL.txt"
+      },
+      {
+        "filename": "Lato-Italic.ttf",
+        "family": "Lato",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/lato/Lato-Italic.ttf",
+        "sha256": "e399c44efe1387100531d26c7e4800c5d12251b890d6654a3098c7c679cb1786",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/lato/OFL.txt"
+      },
+      {
+        "filename": "fa-solid-900.ttf",
+        "family": "Font Awesome 6 Free Solid",
+        "url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/webfonts/fa-solid-900.ttf",
+        "sha256": "af19d135d3a935b3ebfbd80320716ffe1202052c5f68dc2c5f1abc57005ac605",
+        "license": "CC-BY-4.0",
+        "license_url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/LICENSE.txt"
+      },
+      {
+        "filename": "fa-brands-400.ttf",
+        "family": "Font Awesome 6 Brands",
+        "url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/webfonts/fa-brands-400.ttf",
+        "sha256": "0821aa9ca9cc259fad64b1dc7f1cc5be71faaee46bb945ede763fca0c4166bed",
+        "license": "CC-BY-4.0",
+        "license_url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/LICENSE.txt"
+      },
+      {
+        "filename": "LXGWWenKai-Regular.ttf",
+        "family": "LXGW WenKai",
+        "url": "https://raw.githubusercontent.com/lxgw/LxgwWenKai/v1.522/fonts/TTF/LXGWWenKai-Regular.ttf",
+        "sha256": "39ad71264b588165b469e35e6afb162a378dacd1f95348160240ba9038ac3009",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/lxgw/LxgwWenKai/v1.522/OFL.txt"
+      },
+      {
+        "filename": "IBMPlexSerif-Regular.ttf",
+        "family": "IBM Plex Serif",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexserif/IBMPlexSerif-Regular.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexserif/OFL.txt",
+        "sha256": "e882efa9c41949a528ac2369079ec5ef050c1c996bbd0bacce3c3326d44cf80d"
+      },
+      {
+        "filename": "IBMPlexSerif-Bold.ttf",
+        "family": "IBM Plex Serif",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexserif/IBMPlexSerif-Bold.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexserif/OFL.txt",
+        "sha256": "534c02c295999dd86e770457ece1d43db0de9256dd98bf741426f63ae904209e"
+      },
+      {
+        "filename": "IBMPlexSerif-Italic.ttf",
+        "family": "IBM Plex Serif",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexserif/IBMPlexSerif-Italic.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexserif/OFL.txt",
+        "sha256": "4b75b38be4673527231f49c48818d090c913d5042dd5c747b525bf6185d29ecb"
+      },
+      {
+        "filename": "IBMPlexSerif-BoldItalic.ttf",
+        "family": "IBM Plex Serif",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexserif/IBMPlexSerif-BoldItalic.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexserif/OFL.txt",
+        "sha256": "2a32b76ac19c1942bf5942dbbd2a1566e5f1ae9833e421ebcf36d3522715e153"
+      },
+      {
+        "filename": "IBMPlexMono-Regular.ttf",
+        "family": "IBM Plex Mono",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexmono/IBMPlexMono-Regular.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexmono/OFL.txt",
+        "sha256": "6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46"
+      },
+      {
+        "filename": "IBMPlexMono-Bold.ttf",
+        "family": "IBM Plex Mono",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexmono/IBMPlexMono-Bold.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexmono/OFL.txt",
+        "sha256": "ac27abd6450a64dd94467580a02fe6235156d5b92f2926ebbc8e7489df64e0be"
+      },
+      {
+        "filename": "IBMPlexMono-Italic.ttf",
+        "family": "IBM Plex Mono",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexmono/IBMPlexMono-Italic.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexmono/OFL.txt",
+        "sha256": "3362fc791b0652193328b862c1c5f23a789bc7288b1617fa63302f88689a2a34"
+      },
+      {
+        "filename": "IBMPlexMono-BoldItalic.ttf",
+        "family": "IBM Plex Mono",
+        "url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexmono/IBMPlexMono-BoldItalic.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/google/fonts/5e35378e6bda803962ee6fd257e444a7d459660d/ofl/ibmplexmono/OFL.txt",
+        "sha256": "af4e05a761e98c1adf064c48a6352c9bec1a6ad70982cd2a544149323391f98e"
+      },
+      {
+        "filename": "NotoSansCJKsc-Regular.otf",
+        "family": "Noto Sans CJK SC",
+        "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/LICENSE",
+        "sha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b"
+      },
+      {
+        "filename": "NotoSerifCJKsc-Regular.otf",
+        "family": "Noto Serif CJK SC",
+        "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Serif/OTF/SimplifiedChinese/NotoSerifCJKsc-Regular.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Serif/LICENSE",
+        "sha256": "2a2eae2628df83556c54018c41e20fa532c1b862c5256ae8b3f23feb918d12ca"
+      },
+      {
+        "filename": "NotoSansCJKsc-Bold.otf",
+        "family": "Noto Sans CJK SC",
+        "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Bold.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/LICENSE",
+        "sha256": "b5f0d1a190a7f9b43c310a8850630af12553df32c4c050543f9059732d9b4c0a"
+      },
+      {
+        "filename": "NotoSerifCJKsc-Bold.otf",
+        "family": "Noto Serif CJK SC",
+        "url": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Serif/OTF/SimplifiedChinese/NotoSerifCJKsc-Bold.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Serif/LICENSE",
+        "sha256": "8af07d4b6c2e82bcc72a30e066eaf295f11b9424f4aad2eaa9fe0e9c3b38fc73"
+      },
+      {
+        "filename": "KpRoman-Regular.otf",
+        "family": "KpRoman",
+        "url": "https://mirrors.ctan.org/fonts/kpfonts-otf/fonts/KpRoman-Regular.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/kpfonts-otf",
+        "sha256": "fbffd12810face442eab6106a3d1cb53fbdba71fb07d176f4f5b2bc6a4095e69"
+      },
+      {
+        "filename": "KpRoman-Italic.otf",
+        "family": "KpRoman",
+        "url": "https://mirrors.ctan.org/fonts/kpfonts-otf/fonts/KpRoman-Italic.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/kpfonts-otf",
+        "sha256": "985f59cef191a5aff52d93f5e02f2eb7a65ebbd26f1eb8c5cde441fbae1e6763"
+      },
+      {
+        "filename": "KpRoman-BoldItalic.otf",
+        "family": "KpRoman",
+        "url": "https://mirrors.ctan.org/fonts/kpfonts-otf/fonts/KpRoman-BoldItalic.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/kpfonts-otf",
+        "sha256": "95d7588f525af3bc035293a09090008a0e263039d88c02571d0a7cde4c67a2de"
+      },
+      {
+        "filename": "KpSans-Regular.otf",
+        "family": "KpSans",
+        "url": "https://mirrors.ctan.org/fonts/kpfonts-otf/fonts/KpSans-Regular.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/kpfonts-otf",
+        "sha256": "1907f677182372a8a98c77cc4ac74cb024841a6b6b70987ff66e5cca107092a0"
+      },
+      {
+        "filename": "KpSans-Bold.otf",
+        "family": "KpSans",
+        "url": "https://mirrors.ctan.org/fonts/kpfonts-otf/fonts/KpSans-Bold.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/kpfonts-otf",
+        "sha256": "cd5413e1e6242b3bac94436bb948645ec56f19d4f3053425223ddc3f71fa8512"
+      },
+      {
+        "filename": "KpSans-BoldItalic.otf",
+        "family": "KpSans",
+        "url": "https://mirrors.ctan.org/fonts/kpfonts-otf/fonts/KpSans-BoldItalic.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/kpfonts-otf",
+        "sha256": "f261d8fbde0262b4f34ae218c8dc851f666c6e6421a134b40f43e7e0fe5694c5"
+      },
+      {
+        "filename": "LinBiolinum_RB.otf",
+        "family": "Linux Biolinum O",
+        "url": "https://mirrors.ctan.org/fonts/libertine/opentype/LinBiolinum_RB.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/libertine",
+        "sha256": "196fa146480ffee1c9abcb68862087599bfc6ccac68633f0fcf04bdd70527b00"
+      },
+      {
+        "filename": "LinBiolinum_RI.otf",
+        "family": "Linux Biolinum O",
+        "url": "https://mirrors.ctan.org/fonts/libertine/opentype/LinBiolinum_RI.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/libertine",
+        "sha256": "8b94c5d8ffd7fb726b0c3705b85728e6648e9530714e477c9943d87d7793ab30"
+      },
+      {
+        "filename": "LinLibertine_R.otf",
+        "family": "Linux Libertine O",
+        "url": "https://mirrors.ctan.org/fonts/libertine/opentype/LinLibertine_R.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/libertine",
+        "sha256": "6332761e4fc08e30bce6f47e4a08e7d5332abe000ab6ca06c8e86bd88f456114"
+      },
+      {
+        "filename": "LinLibertine_RB.otf",
+        "family": "Linux Libertine O",
+        "url": "https://mirrors.ctan.org/fonts/libertine/opentype/LinLibertine_RB.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/libertine",
+        "sha256": "5a7e41f3610e8b2ed91e53a2d0db975ce31dc81477217702728bfec3c3933d84"
+      },
+      {
+        "filename": "LinLibertine_RI.otf",
+        "family": "Linux Libertine O",
+        "url": "https://mirrors.ctan.org/fonts/libertine/opentype/LinLibertine_RI.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/libertine",
+        "sha256": "0bee2d134a4481e6887a84ef609b61ea2db088ef58940945bb70d4a5cb271b4b"
+      },
+      {
+        "filename": "XCharter-Roman.otf",
+        "family": "XCharter",
+        "url": "https://mirrors.ctan.org/fonts/xcharter/opentype/XCharter-Roman.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/xcharter",
+        "sha256": "e5d22b0f417a0a3e22ee2d7ef10d2e8bba1397066ac3de44e3e3b34e6e56c601"
+      },
+      {
+        "filename": "XCharter-Bold.otf",
+        "family": "XCharter",
+        "url": "https://mirrors.ctan.org/fonts/xcharter/opentype/XCharter-Bold.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/xcharter",
+        "sha256": "baf595556bbd65749a83b41034c900a8d7f8f5b2a1aa24314319501fdcacce9b"
+      },
+      {
+        "filename": "XCharter-Italic.otf",
+        "family": "XCharter",
+        "url": "https://mirrors.ctan.org/fonts/xcharter/opentype/XCharter-Italic.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/xcharter",
+        "sha256": "46100192810480a54dd287e8b3966d5bccf4603ba008d9c8f6bdbe562c6a134b"
+      },
+      {
+        "filename": "XCharter-BoldItalic.otf",
+        "family": "XCharter",
+        "url": "https://mirrors.ctan.org/fonts/xcharter/opentype/XCharter-BoldItalic.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/xcharter",
+        "sha256": "255d912eb1d70aac000a27ad3ee6c8082e7dbc004083b1a86526bcff472b50a9"
+      },
+      {
+        "filename": "SourceHanSansSC-Regular.otf",
+        "family": "Source Han Sans SC",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2/OTF/SimplifiedChinese/SourceHanSansSC-Regular.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2/LICENSE.txt",
+        "sha256": "f1d8611151880c6c336aabeac4640ef434fa13cbfbf1ffe82d0a71b2a5637256"
+      },
+      {
+        "filename": "SourceHanSansSC-Bold.otf",
+        "family": "Source Han Sans SC",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2/OTF/SimplifiedChinese/SourceHanSansSC-Bold.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2/LICENSE.txt",
+        "sha256": "df2b90f5bcc6d01dfc964cec5f6d535d6b6aebd26ed7fd79a9c1b3f2112fcb6b"
+      },
+      {
+        "filename": "SourceHanSerifSC-Regular.otf",
+        "family": "Source Han Serif SC",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-han-serif/7889f11bf31170b5d092a083b357c8c8130f89e0/OTF/SimplifiedChinese/SourceHanSerifSC-Regular.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/adobe-fonts/source-han-serif/7889f11bf31170b5d092a083b357c8c8130f89e0/LICENSE.txt",
+        "sha256": "78aa7a328fd974df2d688c8a9fd74a33d8334dfa84ab24d9d11efb2ffc464117"
+      },
+      {
+        "filename": "SourceHanSerifSC-Bold.otf",
+        "family": "Source Han Serif SC",
+        "url": "https://raw.githubusercontent.com/adobe-fonts/source-han-serif/7889f11bf31170b5d092a083b357c8c8130f89e0/OTF/SimplifiedChinese/SourceHanSerifSC-Bold.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/adobe-fonts/source-han-serif/7889f11bf31170b5d092a083b357c8c8130f89e0/LICENSE.txt",
+        "sha256": "706b8c0de2deff6cbc0c87e2cdedfd33a78b7ffd76cebb4549012f197ba611fe"
+      },
+      {
+        "filename": "KpSans-Italic.otf",
+        "family": "KpSans",
+        "url": "https://mirrors.ctan.org/fonts/kpfonts-otf/fonts/KpSans-Italic.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/kpfonts-otf",
+        "sha256": "1a3508c51a7a31c2b398ba51414bc78c54af50dcd36bab14e37e73beb62eaf8f"
+      },
+      {
+        "filename": "LinBiolinum_R.otf",
+        "family": "Linux Biolinum O",
+        "url": "https://mirrors.ctan.org/fonts/libertine/opentype/LinBiolinum_R.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/libertine",
+        "sha256": "a3440f6d67878de395c8b34074bfb611e6e0721d60eeb0608acba43522ccbfd1"
+      },
+      {
+        "filename": "Fontin-Regular.ttf",
+        "family": "Fontin",
+        "url": "https://www.exljbris.com/dl/fontin2_pc.zip",
+        "sha256": "acb376054dd081d68e1fd68193a0470c834dea5984574b8e0b7fc1e8390f6ec2",
+        "license": "LicenseRef-exljbris-free-font",
+        "license_url": "https://www.exljbris.com/fontin.html",
+        "archive": {
+          "filename": "fontin2_pc.zip",
+          "url": "https://www.exljbris.com/dl/fontin2_pc.zip",
+          "sha256": "d5dae334a8a01fe0ee817bb94a1a567d0128827818f72418735e1f1fc0738d62",
+          "member": "Fontin-Regular.ttf"
+        }
+      },
+      {
+        "filename": "Fontin-Italic.ttf",
+        "family": "Fontin",
+        "url": "https://www.exljbris.com/dl/fontin2_pc.zip",
+        "sha256": "1ef19341653e64ab69b97ef04b8f14f4a8f6a8d589ba2e4c9df9d669f9b6305e",
+        "license": "LicenseRef-exljbris-free-font",
+        "license_url": "https://www.exljbris.com/fontin.html",
+        "archive": {
+          "filename": "fontin2_pc.zip",
+          "url": "https://www.exljbris.com/dl/fontin2_pc.zip",
+          "sha256": "d5dae334a8a01fe0ee817bb94a1a567d0128827818f72418735e1f1fc0738d62",
+          "member": "Fontin-Italic.ttf"
+        }
+      },
+      {
+        "filename": "Fontin-Bold.ttf",
+        "family": "Fontin",
+        "url": "https://www.exljbris.com/dl/fontin2_pc.zip",
+        "sha256": "72742a545b06923f8c30375e5c2b0087098a5c0ba09e633f247a08697f2b794a",
+        "license": "LicenseRef-exljbris-free-font",
+        "license_url": "https://www.exljbris.com/fontin.html",
+        "archive": {
+          "filename": "fontin2_pc.zip",
+          "url": "https://www.exljbris.com/dl/fontin2_pc.zip",
+          "sha256": "d5dae334a8a01fe0ee817bb94a1a567d0128827818f72418735e1f1fc0738d62",
+          "member": "Fontin-Bold.ttf"
+        }
+      },
+      {
+        "filename": "Fontin-SmallCaps.ttf",
+        "family": "Fontin",
+        "url": "https://www.exljbris.com/dl/fontin2_pc.zip",
+        "sha256": "b63c2c7923d6f72348f5293d47909f0f3d5726a338935ad5897512c4e2a8481a",
+        "license": "LicenseRef-exljbris-free-font",
+        "license_url": "https://www.exljbris.com/fontin.html",
+        "archive": {
+          "filename": "fontin2_pc.zip",
+          "url": "https://www.exljbris.com/dl/fontin2_pc.zip",
+          "sha256": "d5dae334a8a01fe0ee817bb94a1a567d0128827818f72418735e1f1fc0738d62",
+          "member": "Fontin-SmallCaps.ttf"
+        }
+      },
+      {
+        "filename": "LinBiolinum_Rah.ttf",
+        "family": "Linux Biolinum",
+        "url": "https://raw.githubusercontent.com/FileEye/linuxlibertine-fonts/895fdfaa3f4ce00b20f9074651ae76f20e8a9b92/LinBiolinum_Rah.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/FileEye/linuxlibertine-fonts/895fdfaa3f4ce00b20f9074651ae76f20e8a9b92/OFL-1.1.txt",
+        "sha256": "f7140084369db686c71e522f0e8de148f0f3f429310376d5f52325a9f0955ba5"
+      },
+      {
+        "filename": "LinBiolinum_RBah.ttf",
+        "family": "Linux Biolinum",
+        "url": "https://raw.githubusercontent.com/FileEye/linuxlibertine-fonts/895fdfaa3f4ce00b20f9074651ae76f20e8a9b92/LinBiolinum_RBah.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/FileEye/linuxlibertine-fonts/895fdfaa3f4ce00b20f9074651ae76f20e8a9b92/OFL-1.1.txt",
+        "sha256": "4e0c3301a562f9f5a75e5eb59e35a3505cd374184df939afc80778242b4fd2f5"
+      },
+      {
+        "filename": "LinBiolinum_RIah.ttf",
+        "family": "Linux Biolinum",
+        "url": "https://raw.githubusercontent.com/FileEye/linuxlibertine-fonts/895fdfaa3f4ce00b20f9074651ae76f20e8a9b92/LinBiolinum_RIah.ttf",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/FileEye/linuxlibertine-fonts/895fdfaa3f4ce00b20f9074651ae76f20e8a9b92/OFL-1.1.txt",
+        "sha256": "cf25abdd264845316969e49d1631dd5c2014652844135c8c59e33202919940a4"
+      },
+      {
+        "filename": "KpRoman-Bold.otf",
+        "family": "KpRoman",
+        "url": "https://mirrors.ibiblio.org/CTAN/fonts/kpfonts-otf/fonts/KpRoman-Bold.otf",
+        "license": "OFL-1.1",
+        "license_url": "https://ctan.org/pkg/kpfonts-otf",
+        "sha256": "5e80e9ac39a689f06040e3233b07d43b7b0fae2e87effcc222b22bc13f845062"
+      },
+      {
+        "filename": "FA7-solid.otf",
+        "family": "Font Awesome 7 Free",
+        "url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/7.3.1/otfs/Font%20Awesome%207%20Free-Solid-900.otf",
+        "sha256": "6beb23abfcf4d938c01fc7a109c636f0a84f9032ea698990a57d2fd30b010a26",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/7.3.1/LICENSE.txt"
+      },
+      {
+        "filename": "FA7-regular.otf",
+        "family": "Font Awesome 7 Free",
+        "url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/7.3.1/otfs/Font%20Awesome%207%20Free-Regular-400.otf",
+        "sha256": "6ea0b33b149ce7e38573067b5d55ceccd49b245b38c053bcfde563e7ed343246",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/7.3.1/LICENSE.txt"
+      },
+      {
+        "filename": "FA7-brands.otf",
+        "family": "Font Awesome 7 Brands",
+        "url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/7.3.1/otfs/Font%20Awesome%207%20Brands-Regular-400.otf",
+        "sha256": "0d1253642b9a55347cf6f020cedf47ac770379b76dd332db91ebe99fea7a06c2",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/7.3.1/LICENSE.txt"
+      },
+      {
+        "filename": "FA6-regular.ttf",
+        "family": "Font Awesome 6 Free",
+        "url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/webfonts/fa-regular-400.ttf",
+        "sha256": "557e6966ad8dba7352ac6d350c1546b685b13d68db26f09cba45cadd660d45db",
+        "license": "OFL-1.1",
+        "license_url": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.7.2/LICENSE.txt"
+      }
+    ],
+    "upstream_pins": {
+      "noto": "f8d157532fbfaeda587e826d4cd5b21a49186f7c",
+      "sans": "a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2",
+      "serif": "7889f11bf31170b5d092a083b357c8c8130f89e0"
+    },
+    "system_fonts": [
+      {
+        "family": "KaiTi",
+        "source": "Installed licensed Windows / Office font; no redistribution or substitute",
+        "templates": [
+          "uniquecv"
+        ]
+      },
+      {
+        "family": "STKaiti",
+        "source": "Installed licensed Windows / Office font; no redistribution or substitute",
+        "templates": [
+          "sweet-gargamel"
+        ]
+      },
+      {
+        "family": "Times New Roman",
+        "source": "Installed licensed Windows / Office font; no redistribution or substitute",
+        "templates": [
+          "sweet-gargamel"
+        ]
+      },
+      {
+        "family": "Segoe UI Emoji",
+        "source": "Installed licensed Windows / Office font; no redistribution or substitute",
+        "templates": [
+          "miku"
+        ]
+      }
+    ]
+  }
+}

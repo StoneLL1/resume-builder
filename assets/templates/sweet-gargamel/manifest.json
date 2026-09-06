@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "id": "sweet-gargamel",
+  "name": "SweetGargamel · 中文简历",
+  "description": "黑白紧凑布局、居中联系方式，沿用原版内容组织。",
+  "tags": [
+    "中文",
+    "单栏",
+    "上游原版"
+  ],
+  "internal": false,
+  "gallery_language": "zh",
+  "gallery_order": 8,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/SweetGargamel/typst-resume-template",
+    "commit": "c57ebe3ddc642d2cefc5db73041708944c3677e1",
+    "path": "lib.typ"
+  },
+  "implementation": "upstream-adapter",
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "zh"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "zh": {
+      "latin": [
+        "Times New Roman"
+      ],
+      "cjk": [
+        "STKaiti"
+      ]
+    }
+  },
+  "preview": "preview-upstream.png",
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/SweetGargamel/typst-resume-template",
+    "commit": "c57ebe3ddc642d2cefc5db73041708944c3677e1",
+    "path": "assets/resume-preview.png",
+    "source_file": "preview-upstream.png",
+    "source_sha256": "b198ca9f174e37eec38dfcfaaffb35dff6c7969853422adcb3931576c1c47fc1",
+    "file": "preview-upstream.png",
+    "sha256": "b198ca9f174e37eec38dfcfaaffb35dff6c7969853422adcb3931576c1c47fc1"
+  },
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "lib.typ",
+      "sha256": "aebb3b893aa1d25acd69ba1615794ffe4454a71390cf6fa1906f5216441bc405"
+    }
+  ],
+  "font_policy": "upstream-original"
+}

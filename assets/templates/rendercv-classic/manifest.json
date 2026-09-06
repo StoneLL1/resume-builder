@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "id": "rendercv-classic",
+  "name": "RenderCV · Classic",
+  "description": "蓝色分节线与居中抬头，采用原版 Source Sans 3 字体。",
+  "tags": [
+    "英文",
+    "单栏",
+    "经典",
+    "图标联系方式"
+  ],
+  "internal": false,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "src/rendercv/renderer/rendercv_typst/lib.typ"
+  },
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "en"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "en": {
+      "latin": [
+        "Source Sans 3",
+        "Font Awesome 7 Free",
+        "Font Awesome 7 Brands"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.png",
+  "gallery_language": "en",
+  "gallery_order": 0,
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "examples/John_Doe_ClassicTheme_CV.pdf",
+    "source_file": "preview-upstream.pdf",
+    "source_sha256": "96fb560dcb5bd335dd96d248bad0ba70a3fd4cd599595c9a895631718847996c",
+    "file": "preview-upstream.png",
+    "sha256": "931ba8b89948d54465494415af83a35592b6842110f1f9e90062b246437689bb",
+    "page": 1,
+    "conversion": "First page of the unchanged upstream PDF, rasterized with pdftoppm at 1800px"
+  },
+  "implementation": "upstream-adapter",
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/lib.typ",
+      "sha256": "cf601592153cee809a7369a0414e1e04954f3baad810eda1a3f78d349915e72b"
+    },
+    {
+      "path": "upstream/original/theme.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/examples/classic.typ",
+      "sha256": "64a6e1d5b7822a9e22d2e40892b9a3d3a6597b7cbda1a059da903927b1a1aac6"
+    }
+  ],
+  "font_policy": "upstream-original",
+  "color_mode": "color"
+}

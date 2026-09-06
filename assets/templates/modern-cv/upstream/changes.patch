@@ -1,0 +1,57 @@
+--- lib.typ
++++ upstream/layout.typ
+@@ -1,3 +1,4 @@
++#import "../bindings.typ": editable
+ #import "@preview/fontawesome:0.6.2": *
+ #import "@preview/linguify:0.5.0": *
+ 
+@@ -33,9 +34,9 @@
+ // Common helper functions
+ #let __format_author_name(author, language) = {
+   if language == "zh" or language == "ja" {
+-    str(author.lastname) + str(author.firstname)
++    author.lastname + author.firstname
+   } else {
+-    str(author.firstname) + " " + str(author.lastname)
++    author.firstname + " " + author.lastname
+   }
+ }
+ 
+@@ -470,12 +471,6 @@
+   }
+ 
+   show: body => context {
+-    set document(
+-      author: author.firstname + " " + author.lastname,
+-      title: lflib._linguify("resume", lang: language, from: lang_data).ok,
+-      description: desc,
+-      keywords: keywords,
+-    )
+     body
+   }
+ 
+@@ -538,6 +533,7 @@
+       #pad(bottom: 5pt)[
+         #block[
+           #set text(size: 32pt, style: "normal", font: header-font)
++          #editable("basics.name", "text")[
+           #if language == "zh" or language == "ja" [
+             #text(accent-color, weight: "bold")[#author.lastname]#text(
+               weight: "thin",
+@@ -545,6 +541,7 @@
+           ] else [
+             #text(accent-color, weight: "thin")[#author.firstname]
+             #text(weight: "bold")[#author.lastname]
++          ]
+           ]
+         ]
+       ]
+@@ -585,7 +582,7 @@
+     set box(height: 9pt)
+     set text(size: 9pt, weight: "regular", style: "normal")
+ 
+-    let items = __format_contact_items(author, item-inset: contact-items-inset)
++    let items = if "contacts-display" in author { author.at("contacts-display") } else { __format_contact_items(author, item-inset: contact-items-inset) }
+     align(center, items.join(contact-items-separator))
+   }
+ 

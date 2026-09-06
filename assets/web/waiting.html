@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>生成中 · Resume Builder</title>
+<link rel="stylesheet" href="/assets/app.css" />
+</head>
+<body>
+<div class="waiting-shell">
+
+  <header class="appbar">
+    <div class="container appbar-inner">
+      <span class="brand"><span class="brand-mark">简</span>Resume Builder</span>
+      <nav><a href="/facts" class="navlink">事实核对</a></nav>
+    </div>
+  </header>
+
+  <main class="waiting-main">
+    <div class="waiting-card">
+      <div class="spinner" id="spinner"></div>
+      <h1 style="font-size:24px;font-weight:600;letter-spacing:-0.01em" id="waitTitle">Agent 正在排版…</h1>
+      <div class="waiting-stages" id="stages"></div>
+      <p class="waiting-note" id="note">等待 Agent 完成第二轮精修与排版检查。</p>
+      <div class="banner banner-warn hidden" id="noToken">缺少令牌：请从 Agent 给出的带 ?token= 的链接打开本页。</div>
+      <div class="waiting-error" id="errBox" hidden>
+        <div class="banner banner-error" id="errText"></div>
+        <div style="display:flex;justify-content:center;gap:12px;margin-top:14px">
+          <button class="btn btn-secondary" id="retryBtn">重试渲染</button>
+          <button class="btn btn-ghost" id="backBtn">返回选模板</button>
+        </div>
+      </div>
+      <p style="margin-top:28px;font-size:12.5px;color:var(--meta)">
+        页面会自动前进，无需手动刷新。也可以回到对话里看 Agent 的进展。
+      </p>
+    </div>
+  </main>
+</div>
+
+<script src="/assets/app.js"></script>
+<script>
+/* ═══ 生成等待页（Batch 5） ═══
+   阶段位于 generating 时展示进度、错误与重试；Agent 把阶段切回
+   editor / gallery 后页面自动跳转。轮询 /api/events（含 stage 事件
+   与 render_failed 事件）。 */
+
+const TITLE_BY_STAGE = {
+  generating: 'Agent 正在排版…',
+  editor: '排版完成，正在进入编辑器…',
+  gallery: '正在返回模板画廊…',
+  done: '已完成导出，正在进入编辑器…',
+  writing: 'Agent 正在整理内容…',
+};
+
+function renderStages(stage) {
+  const order = STAGE_LIST.map(s => s[0]);
+  const cur = order.indexOf(stage);
+  $('#stages').innerHTML = STAGE_LIST.map(([key, zh], i) =>
+    `<span class="wstage${i === cur ? ' on' : (cur >= 0 && i < cur ? ' done' : '')}"><span class="dot"></span>${zh}</span>`
+  ).join('');
+}
+
+function renderState(state) {
+  if (!state) return;
+  const stage = state.stage;
+  $('#waitTitle').textContent = TITLE_BY_STAGE[stage] || '请稍候…';
+  $('#note').textContent = state.note || '';
+  $('#spinner').classList.toggle('hidden', stage !== 'generating');
+  renderStages(stage);
+
+  /* 阶段切换 → 自动前进（editor/done 进编辑器，gallery 回画廊） */
+  if (stage === 'editor' || stage === 'done') { location.replace('/editor'); return; }
+  if (stage === 'gallery') { location.replace('/gallery'); return; }
+
+  /* 错误展示（session.error 或最近一次渲染失败） */
+  const render = state.render;
+  const failed = (state.error && state.error.message) || (render && render.ok === false && render.error);
+  const box = $('#errBox');
+  if (failed) {
+    box.hidden = false;
+    $('#errText').textContent = '出错了：' + failed + '\n可重试渲染；若仍失败，请回到对话让 Agent 修复。';
+  } else {
+    box.hidden = true;
+  }
+}
+
+$('#retryBtn').addEventListener('click', async () => {
+  $('#retryBtn').disabled = true;
+  try { await api('/api/render', { method: 'POST', body: {} }); toast('已重新排队渲染'); }
+  catch (e) { toast('重试失败：' + e.message); }
+  $('#retryBtn').disabled = false;
+});
+$('#backBtn').addEventListener('click', () => { location.href = '/gallery'; });
+
+if (warnNoToken('生成等待页')) {
+  /* 没有令牌轮询必然 401：至少把时间线画出来 */
+  renderStages('generating');
+} else {
+  api('/api/state').then(renderState).catch(e => { $('#note').textContent = '读取状态失败：' + e.message; });
+  startEventPolling([(ev, state) => {
+    if (ev === null || ev.type === 'stage' || ev.type === 'render_failed' || ev.type === 'rendered') renderState(state);
+  }]);
+}
+</script>
+</body>
+</html>

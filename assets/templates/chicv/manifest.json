@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "id": "chicv",
+  "name": "Chi CV · 原版",
+  "description": "黑白单栏、紧凑横线，沿用 skyzh 原版极简样式。",
+  "tags": [
+    "中文",
+    "单栏",
+    "上游原版"
+  ],
+  "internal": false,
+  "gallery_language": "zh",
+  "gallery_order": 1,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/skyzh/chicv",
+    "commit": "ab26f3d340ce0aeb27a5cc21a296fce28f9446c7",
+    "path": "template/cv.typ"
+  },
+  "implementation": "upstream-adapter",
+  "license": {
+    "name": "MIT AND CC0-1.0",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "zh"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "zh": {
+      "latin": [
+        "Libertinus Serif",
+        "Linux Biolinum"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.png",
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/skyzh/chicv",
+    "commit": "ab26f3d340ce0aeb27a5cc21a296fce28f9446c7",
+    "path": "cv.png",
+    "source_file": "preview-upstream.png",
+    "source_sha256": "62dc1f435f60493cc8fe9e7be23aaaea131b702e829669cb8b94ad969add1aa0",
+    "file": "preview-upstream.png",
+    "sha256": "62dc1f435f60493cc8fe9e7be23aaaea131b702e829669cb8b94ad969add1aa0"
+  },
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "template/cv.typ",
+      "sha256": "dbeec8dbf3c03ae73d685f6670057d668d311aee286b433a671bb1aa6ec031a8"
+    }
+  ],
+  "native_default_cjk": true,
+  "font_policy": "upstream-original"
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "id": "modern-cv",
+  "name": "Modern CV",
+  "description": "蓝色标题与细线分节，姓名使用不同字重，沿用原版 Source Sans 3 与 Roboto。",
+  "tags": [
+    "英文",
+    "单栏",
+    "无衬线"
+  ],
+  "internal": false,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/ptsouchlos/modern-cv",
+    "commit": "ff9c6164fa63828bd41b63a80f5e1a0089f69e3e",
+    "path": "lib.typ"
+  },
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "en"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "en": {
+      "latin": [
+        "Source Sans 3",
+        "Roboto",
+        "Font Awesome 7 Free",
+        "Font Awesome 7 Brands"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.png",
+  "gallery_language": "en",
+  "gallery_order": 7,
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/ptsouchlos/modern-cv",
+    "commit": "ff9c6164fa63828bd41b63a80f5e1a0089f69e3e",
+    "path": "assets/images/resume.png",
+    "source_file": "preview-upstream.png",
+    "source_sha256": "8e501d42a57c12029cc043a7b21e6075e354189160b0307815e5e5650c2083ac",
+    "file": "preview-upstream.png",
+    "sha256": "8e501d42a57c12029cc043a7b21e6075e354189160b0307815e5e5650c2083ac"
+  },
+  "implementation": "upstream-adapter",
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "lib.typ",
+      "sha256": "29c40afb7a99c9f6910dea4dfcb48c4b75d122513463c8cc02b22b899d2377e7"
+    }
+  ],
+  "font_policy": "upstream-original",
+  "color_mode": "color"
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "name": "fontawesome",
+    "version": "0.5.0",
+    "url": "https://packages.typst.org/preview/fontawesome-0.5.0.tar.gz",
+    "sha256": "be58301b1aac00e31075e53c944cfc50aa6c1f8ff670c8e29c6ec21e94a2c07a"
+  },
+  {
+    "name": "nerd-icons",
+    "version": "0.2.0",
+    "url": "https://packages.typst.org/preview/nerd-icons-0.2.0.tar.gz",
+    "sha256": "848b5c6b185cb6a27178660d448fdea4980b8a7b6cd1b503c6773d35e2da3ea9"
+  },
+  {
+    "name": "cuti",
+    "version": "0.2.1",
+    "url": "https://packages.typst.org/preview/cuti-0.2.1.tar.gz",
+    "sha256": "5c7b37cbb7e38c04db22182c3c0819e42f3e5513a76cb0fc9ce5c6c0307b71d7"
+  },
+  {
+    "name": "fontawesome",
+    "version": "0.6.0",
+    "url": "https://packages.typst.org/preview/fontawesome-0.6.0.tar.gz",
+    "sha256": "31374c788d6850c7fd3da742a67e8a753e5644fa0c677b845f75be8aa488380c"
+  },
+  {
+    "name": "fontawesome",
+    "version": "0.6.2",
+    "url": "https://packages.typst.org/preview/fontawesome-0.6.2.tar.gz",
+    "sha256": "0ad8435267760fa7b35dc468c350eb614a88670d264e058147b113047c0fb54d"
+  },
+  {
+    "name": "linguify",
+    "version": "0.5.0",
+    "url": "https://packages.typst.org/preview/linguify-0.5.0.tar.gz",
+    "sha256": "ad525da5e5d31dc955211496d7a381c83cf5618504937795ca68946355309378"
+  },
+  {
+    "name": "scienceicons",
+    "version": "0.1.0",
+    "url": "https://packages.typst.org/preview/scienceicons-0.1.0.tar.gz",
+    "sha256": "05d9972ee076acc0c7282ab700e8a8e5dac39cbdd0e596df68a450997f895599"
+  }
+]

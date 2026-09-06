@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "id": "rendercv-ink",
+  "name": "RenderCV · Ink",
+  "description": "紫墨色抬头与小型大写分节标题，采用原版 EB Garamond 衬线字体。",
+  "tags": [
+    "英文",
+    "紫墨",
+    "单栏",
+    "衬线"
+  ],
+  "internal": false,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "src/rendercv/renderer/rendercv_typst/lib.typ"
+  },
+  "license": {
+    "name": "MIT",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "en"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "en": {
+      "latin": [
+        "EB Garamond",
+        "Font Awesome 7 Free",
+        "Font Awesome 7 Brands"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.png",
+  "gallery_language": "en",
+  "gallery_order": 3,
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/rendercv/rendercv",
+    "commit": "1d4b87bc427e4cf61c0ef49623c971b0e2224708",
+    "path": "examples/John_Doe_InkTheme_CV.pdf",
+    "source_file": "preview-upstream.pdf",
+    "source_sha256": "fd8a8d47db84eb75efc28004c6c4bdb20e0adf9d46bec6ec406047c68e3c29dc",
+    "file": "preview-upstream.png",
+    "sha256": "1becabb247aa9cd80feb64a1a8d752de7e9c8363ca1656abe6eafc49dd650b2f",
+    "page": 1,
+    "conversion": "First page of the unchanged upstream PDF, rasterized with pdftoppm at 1800px"
+  },
+  "implementation": "upstream-adapter",
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/lib.typ",
+      "sha256": "cf601592153cee809a7369a0414e1e04954f3baad810eda1a3f78d349915e72b"
+    },
+    {
+      "path": "upstream/original/theme.typ",
+      "upstream_path": "src/rendercv/renderer/rendercv_typst/examples/ink.typ",
+      "sha256": "2b921ecd4be30e48529c357893170399ecda5c5c14d828406c6539dbd5632c80"
+    }
+  ],
+  "color_mode": "color",
+  "font_policy": "upstream-original"
+}

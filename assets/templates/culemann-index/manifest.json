@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "id": "culemann-index",
+  "name": "Index CV",
+  "description": "左侧递增编号、细线分节与对齐的正文，沿用原版 Roboto 字体。",
+  "tags": [
+    "英文",
+    "编号分节",
+    "单栏",
+    "无衬线"
+  ],
+  "internal": false,
+  "entry": "template.typ",
+  "upstream": {
+    "repo": "https://github.com/davidculemann/typst-templates",
+    "commit": "cdc2313f579469661e8ae14c8290c57810fa98ef",
+    "path": "packages/index-cv/0.1.0/src/index.typ"
+  },
+  "license": {
+    "name": "MIT-0",
+    "file": "LICENSE",
+    "notice": "ATTRIBUTION.md"
+  },
+  "languages": [
+    "en"
+  ],
+  "page_support": [
+    1,
+    2
+  ],
+  "layout": {
+    "columns": 1,
+    "photo": false
+  },
+  "fonts": {
+    "en": {
+      "latin": [
+        "Roboto"
+      ],
+      "cjk": []
+    }
+  },
+  "preview": "preview-upstream.webp",
+  "gallery_language": "en",
+  "gallery_order": 8,
+  "preview_source": {
+    "kind": "upstream",
+    "repo": "https://github.com/davidculemann/typst-templates",
+    "commit": "cdc2313f579469661e8ae14c8290c57810fa98ef",
+    "path": "templates/index/preview.webp",
+    "source_file": "preview-upstream.webp",
+    "source_sha256": "4d2e3e710222e0cd22b29c6cdf69115d2c80c513f2d33e07567d16a4867edb47",
+    "file": "preview-upstream.webp",
+    "sha256": "4d2e3e710222e0cd22b29c6cdf69115d2c80c513f2d33e07567d16a4867edb47"
+  },
+  "implementation": "upstream-adapter",
+  "source_files": [
+    {
+      "path": "upstream/original/source.typ",
+      "upstream_path": "packages/index-cv/0.1.0/src/index.typ",
+      "sha256": "a2dd2541a097cbfe32f2a7c8fdfa8314dcca66097231f3be03725c92ab0d4c9c"
+    }
+  ],
+  "font_policy": "upstream-original",
+  "color_mode": "color"
+}

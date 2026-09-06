@@ -1,104 +1,58 @@
-# resume-builder
+<h1 align="center">resume-builder</h1>
 
-**An Agent Skill for turning verified experience into application-ready resumes.**
+<p align="center">Your experience. The right questions. A resume ready to send.</p>
 
-[简体中文](README.md) · English
+<p align="center">
+  <a href="#screenshots"><img src="https://img.shields.io/badge/Templates-18-4D8BC4?style=flat-square" alt="18 resume templates"></a>
+  <a href="INSTALL.md"><img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-555555?style=flat-square" alt="Windows and macOS"></a>
+  <a href="references/rendering-stage.md"><img src="https://img.shields.io/badge/Rendering-Typst-239DAD?style=flat-square" alt="Rendered with Typst"></a>
+  <a href="#licenses"><img src="https://img.shields.io/badge/Original_code-MIT-555555?style=flat-square" alt="Original code licensed under MIT; see third-party notices"></a>
+</p>
 
-![Original resume-builder cover](cover.png)
+<p align="center"><a href="README.md">简体中文</a> · <strong>English</strong></p>
 
-`resume-builder` brings guided questions, fact verification, resume writing, template selection, and PDF export into one workflow. It supports one- to two-page Chinese or English resumes for jobs, internships, competitions, and academic admissions.
+<p align="center"><a href="#quick-start">Quick Start</a> &nbsp;·&nbsp; <a href="#whats-new">What's New</a> &nbsp;·&nbsp; <a href="#screenshots">Gallery</a> &nbsp;·&nbsp; <a href="#docs">Docs</a></p>
 
-Its writing methodology is **distilled from nearly 100 highly liked resume advice posts on Xiaohongshu (Rednote)** and organized into a guide the Agent must read before drafting. Users provide their goals and available materials; the Agent identifies missing information, asks about individual contributions and supporting evidence, then prepares the resume through a local template gallery and visual editor.
+<p align="center">
+  <img src="cover.png" width="800" alt="resume-builder — turn your chaos into career">
+</p>
 
-[What's New](#whats-new) · [Features](#features) · [Screenshots](#screenshots) · [Quick Start](#quick-start) · [Installation](INSTALL.md)
+**resume-builder is an Agent Skill that takes a resume from source material to an exportable PDF.** Bring an existing resume, a target role, or scattered notes. The Agent asks follow-up questions, verifies facts, drafts the content, and guides you through template selection and browser editing.
+
+Its writing methodology is **distilled from nearly 100 highly liked resume advice posts on Xiaohongshu (Rednote)**. It supports one- to two-page Chinese or English resumes for jobs, internships, competitions, and academic admissions. A polished first draft is not a prerequisite for getting started.
 
 <a id="whats-new"></a>
 
 ## What's New
 
-- **Chinese and English template gallery:** Nine templates per language, with category switching, full previews, and remembered selections.
-- **Visual browser editing:** Click text blocks to edit, add or remove entries and bullets, and reorder items within a section.
-- **Typst rendering and live previews:** Automatically render saved changes, display actual page counts, and export consistently named PDFs.
-- **Conversation and browser collaboration:** The Agent and editor share `resume.json`, so content work can continue through either interface.
-- **Fact review page:** Inspect sources and filter claims by confirmed, pending, blocking, or omitted status.
-- **Two-stage drafting:** Write template-independent content first, then refine it for the selected layout. Changing templates triggers another layout review.
+| Capability | What you can do |
+| :--- | :--- |
+| **18 Chinese & English templates** | Browse nine templates per language and inspect full previews before choosing. |
+| **Visual browser editing** | Click text to edit, add or remove entries and bullets, and reorder items within a section. |
+| **Live Typst rendering** | Render saved changes, check actual page counts, and export consistently named PDFs. |
+| **Conversation & browser workflow** | Continue content work in either interface; draft first, then refine for the selected template. |
+| **Traceable facts** | Inspect sources and filter claims by confirmed, pending, blocking, or omitted status. |
 
-<a id="features"></a>
+![Visual editor with the actual Typst render on the left and resume structure on the right](assets/screenshots/editor.png)
 
-## Features
-
-### Proactive questions that uncover relevant experience
-
-Users do not need a complete draft to get started. The Agent can work from an existing resume, scattered notes, or a conversation. It establishes the target, selects relevant material, and asks questions in prioritized batches, typically three to six at a time.
-
-For example, “contributed to a campus registration system” prompts questions about responsibilities, technical choices, difficulties, actual usage, and deliverables. The Agent updates the evidence record as the user responds and follows up on remaining gaps. Information explicitly marked as unavailable, skipped, or excluded is not repeatedly requested.
-
-Once the material is sufficient, the Agent proceeds to template selection. Users provide facts, confirm content choices, and select a layout; they do not have to orchestrate each step.
-
-### Practical writing guidance from Xiaohongshu
-
-The [complete writing guide](references/Resume-Writing-Guide-LLM.md) covers engineering, AI / Agent projects, data, product and operations, graduates, career changes, and academic admissions. Its core principles are:
-
-- **Select for the target:** Create a resume for a specific goal and prioritize relevant, supported experience.
-- **Make individual contributions clear:** Connect the problem, personal actions, and outcome instead of listing responsibilities alone.
-- **Prioritize evidence over numbers:** Check how metrics were calculated. When reliable numbers are unavailable, describe deployment, adoption, acceptance, or deliverables.
-- **Write claims the candidate can explain:** Do not invent experience, inflate ownership, or present team results as individual achievements.
-
-The guidance is bundled with the project. Using the skill does not require accessing Xiaohongshu or signing in to it. The detailed guide and Agent installation instructions are currently written in Chinese.
-
-### Traceable facts and resumable projects
-
-Each resume has its own claim map and project directory. The Agent uses confirmed facts when drafting. The browser displays claim statuses read-only; editing wording does not automatically verify a claim. The export button does not enforce claim approval, so factual checks remain part of the writing workflow and final review.
-
-Content and session state are stored locally and can be resumed after closing the browser. Concurrent Agent and browser edits use the most recently saved content; conflicts are not automatically merged.
-
-<a id="screenshots"></a>
-
-## Screenshots
-
-These are actual local application screenshots. The editor uses fictional demonstration data; gallery cards show public upstream template previews. See [screenshot provenance](assets/screenshots/README.md). The screenshots show the current Chinese-language interface, which supports both Chinese and English resume content.
-
-### Template gallery
-
-Browse by language and inspect full previews before choosing a template. Switching categories does not change resume content. If a template in another language is selected, the Agent handles translation, refinement, and verification.
-
-| Chinese templates | English templates |
-|---|---|
-| ![Chinese template gallery](assets/screenshots/gallery-zh.png) | ![English template gallery](assets/screenshots/gallery-en.png) |
-
-### Visual editor
-
-The preview is rendered by Typst and supports text-block editing, structural changes, template switching, and page-count inspection. Larger content revisions can continue in the Agent conversation.
-
-![Visual editor and resume structure panel](assets/screenshots/editor.png)
-
-<details>
-<summary>View inline editing and fact review</summary>
-
-**Inline editing:** Click a field in the preview to edit it. Bold text and links are supported, and saved changes trigger a new render.
-
-![Editing a resume text block](assets/screenshots/inline-edit.png)
-
-**Fact review:** Inspect sources and four confirmation statuses. The Agent maintains those statuses through the conversation.
-
-![Fact review and status filters](assets/screenshots/facts.png)
-
-</details>
+<p align="center"><sub>Actual local interface · Fictional demonstration data · Automatic rendering after save</sub></p>
 
 <a id="quick-start"></a>
 
 ## Quick Start
 
-Send the following to an Agent that can access local files, execute commands, and load `SKILL.md`:
+### 1. Ask your Agent to install
+
+Send this to an Agent that can access local files, execute commands, and load `SKILL.md`:
 
 ```text
 Fetch and follow instructions from:
 https://raw.githubusercontent.com/StoneLL1/resume-builder/main/INSTALL.md
 ```
 
-Alternatively, ask the Agent to read [INSTALL.md](INSTALL.md) from a local checkout. The instructions are written for the Agent and cover directory discovery, installation, runtime setup, and verification. Claude Code and Codex use their configured skill directories; OpenClaw, Hermes, and other runners use their own configuration.
+[INSTALL.md](INSTALL.md) is written for the Agent and covers directory discovery, installation, runtime setup, and verification. Windows and macOS bootstrap scripts are included. Node.js and XeLaTeX are not required.
 
-After installation, for example:
+### 2. Bring your materials and start a conversation
 
 ```text
 Use resume-builder to create a one-page English resume for this job description.
@@ -107,57 +61,144 @@ missing information and verify the facts before drafting. Once the content is
 ready, open the template gallery so I can choose a layout and refine it in the browser.
 ```
 
-Windows and macOS bootstrap scripts prepare Python, Typst, and open fonts. Node.js and XeLaTeX are not required. Some templates need original system fonts; see [installation instructions](INSTALL.md).
+Provide your resume, job description, and supporting materials in the conversation. The Agent opens the browser when the content is ready; you do not have to direct every step.
 
-## Workflow
+<a id="features"></a>
+
+## Why resume-builder
+
+### Better questions lead to specific content
+
+“I contributed to a project” is a starting point. The Agent selects material for your target and typically asks **three to six questions at a time** to clarify responsibilities, challenges, and outcomes. For example:
+
+> **You:** I helped build a campus registration system.<br>
+> **The Agent follows up:** Which parts did you own? What problem did you solve? Was it deployed, used, or formally accepted?
+
+Your answers enter the fact record before they inform the draft. Information explicitly marked as unavailable, skipped, or excluded is not repeatedly requested.
+
+### Practical advice, turned into writing rules
+
+The Agent must read the bundled [writing guide](references/Resume-Writing-Guide-LLM.md) before drafting. No Xiaohongshu account or access is required. Four principles guide the work:
+
+- **Select for the target:** Prioritize relevant experience supported by evidence.
+- **Show individual contributions:** Problem → personal action → outcome, beyond a list of responsibilities.
+- **Evidence before metrics:** Without reliable numbers, describe deployment, adoption, acceptance, or deliverables.
+- **Make claims you can explain:** Do not invent experience, inflate ownership, or claim all of a team's results.
+
+### Content first, layout second
+
+Draft independently of a template, then refine for the chosen layout. Changing templates triggers another review. Projects are stored separately and can be resumed after closing the browser, with a PDF as the final deliverable.
+
+<a id="screenshots"></a>
+
+## Templates & Screenshots
+
+### See the layout before you choose
+
+| Chinese · 9 templates | English · 9 templates |
+| :---: | :---: |
+| ![Chinese template gallery](assets/screenshots/gallery-zh.png) | ![English template gallery](assets/screenshots/gallery-en.png) |
+
+Templates retain upstream layouts and fonts, with full-size previews. Harvard provides a black-and-white layout. See [screenshot provenance](assets/screenshots/README.md) for sources. The current interface, detailed writing guide, and Agent installation instructions are in Chinese; English resume content is supported.
+
+<details>
+<summary><strong>Explore all 18 templates</strong></summary>
+
+| Language | Templates |
+| :--- | :--- |
+| Chinese | OrangeX4, Chi CV original / Chinese edition, Resume NG, Miku CV, Qianxi, Unique CV, Habaneraa, SweetGargamel |
+| English | RenderCV Classic / ModernCV / Harvard / Ink / Opal, Basic Resume, ImpreCV, Modern CV, Index CV |
+
+See the [template registry](assets/templates/registry.md) for pinned revisions, attribution, font requirements, and adaptation diffs. Switching gallery categories does not change content. If you select a template in another language, the Agent translates, refines, and verifies the resume.
+
+</details>
+
+<details>
+<summary><strong>See inline editing and fact review</strong></summary>
+
+**Inline editing** · Click a field in the preview to edit it. Bold text and links are supported; saving triggers a new render.
+
+![Editing a resume text block](assets/screenshots/inline-edit.png)
+
+**Fact review** · Inspect sources and four confirmation statuses, maintained by the Agent through the conversation.
+
+![Fact review and status filters](assets/screenshots/facts.png)
+
+</details>
+
+## From Source Material to PDF
 
 ```mermaid
 flowchart LR
-    A[Goals and source material] --> B[Questions and fact verification]
-    B --> C[Content drafting]
-    C --> D[User selects a template]
-    D --> E[Layout review and visual editing]
-    E --> F[Final review and PDF export]
-    E -->|Change template| D
+    A[Goals & materials] --> B[Questions · Verification · Drafting]
+    B --> C[Template · Visual editing]
+    C --> D[Final review · PDF]
+    C -->|Review after template change| C
 ```
 
-Existing resumes, job descriptions, and additional materials are provided through the conversation. The browser opens after content preparation. When editing is complete, use the **完成 (Finish)** button to notify the Agent, then **导出 → 导出正式 PDF (Export → Export final PDF)** after review. Files are named `Name-TargetRole-Phone.pdf`, with the phone portion omitted when unavailable.
+When editing is complete, use **完成 (Finish)** to notify the Agent for final review, then **导出 → 导出正式 PDF (Export → Export final PDF)**. Files are named `Name-TargetRole-Phone.pdf`, with the phone portion omitted when unavailable.
 
-## Templates
+<a id="docs"></a>
 
-| Language | Included templates |
-|---|---|
-| Chinese · 9 | OrangeX4, Chi CV original / Chinese edition, Resume NG, Miku CV, Qianxi, Unique CV, Habaneraa, SweetGargamel. |
-| English · 9 | RenderCV Classic / ModernCV / Harvard / Ink / Opal, Basic Resume, ImpreCV, Modern CV, Index CV. |
+## Documentation
 
-Templates retain upstream layouts and fonts, with pinned revisions, attribution, and adaptation diffs. Harvard provides a black-and-white layout. See the [template registry](assets/templates/registry.md) for details.
+| Resource | Contents |
+| :--- | :--- |
+| [Installation](INSTALL.md) | Agent installation, dependencies, verification, and runner setup |
+| [Skill entry point](SKILL.md) | Agent behavior and workflow routing |
+| [Writing guide](references/Resume-Writing-Guide-LLM.md) | Methodology organized by role and experience type |
+| [Template registry](assets/templates/registry.md) | All 18 templates, upstream sources, and licenses |
+| [Data contract](references/data-contract.md) | Resume data, fact records, and project directory conventions |
 
-## Project Structure
+<details>
+<summary><strong>Project structure</strong></summary>
 
 ```text
 resume-builder/
-├── SKILL.md                       # Agent entry point and workflow routing
-├── INSTALL.md                     # Agent-facing installation instructions
+├── SKILL.md                       # Agent entry point
+├── INSTALL.md                     # Agent installation workflow
 ├── README.md / README.en.md        # Chinese / English documentation
 ├── cover.png                      # Original cover artwork
-├── references/                    # Writing guide, data contract, and stage guides
-├── scripts/                       # Bootstrap, server, rendering, and validation
-└── assets/                        # Templates, web UI, dependency manifests, screenshots
+├── references/                    # Writing and workflow guides
+├── scripts/                       # Bootstrap, server, rendering, validation
+├── tests/                         # HTTP regression tests
+└── assets/                        # Templates, web UI, dependencies, screenshots
 ```
 
-Each resume is stored in a separate purpose-specific directory outside the skill, containing `resume.json`, the final PDF, and a `work/` directory for source notes, the claim map, session state, and build artifacts.
+Each resume lives in a purpose-specific directory outside the skill, containing `resume.json`, the final PDF, and a `work/` directory for source materials, the claim map, session state, and build files.
 
-## Scope and Data Handling
+</details>
 
-- Supports one- to two-page Chinese or English resumes in desktop browsers. Bootstrap scripts cover Windows and macOS; a Linux runtime manifest is not currently provided.
-- The web and rendering service listens only on `127.0.0.1`. Initial setup downloads runtimes and open fonts; templates and Typst packages are bundled.
-- Data handling in the Agent conversation depends on the Agent and model provider. A local web interface does not imply that the entire AI workflow runs offline.
-- Mixed bilingual layouts, mobile / tablet editing, browser uploads of resumes or job descriptions, embedded AI chat, cross-section dragging, and snapshot rollback are not currently supported.
-- Cover letters, portfolios, and long academic CVs are outside the skill's scope.
+## FAQ
+
+<details>
+<summary><strong>Which Agents and platforms are supported?</strong></summary>
+
+The Agent needs local file access, command execution, and support for `SKILL.md`. Claude Code and Codex use their configured skill directories; OpenClaw, Hermes, and other runners use their own configuration. Bootstrap scripts cover Windows and macOS; no Linux runtime manifest is currently provided. Some templates need original system fonts; see [INSTALL.md](INSTALL.md).
+
+The editor targets desktop browsers and one- to two-page monolingual Chinese or English resumes. Mobile / tablet editing, mixed bilingual layouts, cover letters, portfolios, and long academic CVs are outside the current scope.
+
+</details>
+
+<details>
+<summary><strong>Where is data stored? Is the entire workflow offline?</strong></summary>
+
+Resume content and session state are stored locally. The web service listens only on `127.0.0.1`. Initial setup downloads runtimes and open fonts; templates and Typst packages are bundled. Data handling in the Agent conversation depends on your Agent and model provider. A local web interface does not make the entire AI workflow offline.
+
+</details>
+
+<details>
+<summary><strong>What are the limits of browser editing and fact review?</strong></summary>
+
+The Agent and editor share `resume.json`. Concurrent edits use the most recently saved content; conflicts are not automatically merged. Snapshot rollback, cross-section dragging, browser uploads, and embedded AI chat are not currently available.
+
+The Agent drafts from confirmed facts. The browser displays claim statuses read-only; editing wording does not verify a claim. Export does not block unconfirmed claims, so factual checks remain part of the writing workflow and final review.
+
+</details>
 
 <a id="licenses"></a>
 
-## Acknowledgments and License
+## Acknowledgments & License
 
 Thanks to the Xiaohongshu contributors who shared their resume experience, and to the maintainers of the upstream templates, Typst, fonts, and icon projects.
 

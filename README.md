@@ -14,7 +14,7 @@
 <p align="center"><a href="#quick-start">快速开始</a> &nbsp;·&nbsp; <a href="#whats-new">What's New</a> &nbsp;·&nbsp; <a href="#screenshots">模板预览</a> &nbsp;·&nbsp; <a href="#docs">文档</a></p>
 
 <p align="center">
-  <img src="cover.png" width="800" alt="resume-builder — turn your chaos into career">
+  <img src="cover.png" width="500" alt="resume-builder — turn your chaos into career">
 </p>
 
 **resume-builder 是一个从素材收集到 PDF 交付的 Agent Skill。** 你提供旧简历、目标岗位或零散经历，Agent 主动追问、核对事实、组织内容，再带你选模板、在浏览器中精修。

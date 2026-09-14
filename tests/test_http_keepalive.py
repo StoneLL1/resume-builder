@@ -57,6 +57,31 @@ class KeepAliveTests(unittest.TestCase):
     def test_bodyless_local_action_then_poll(self):
         self.action_then_poll("/api/editing-done", body=None)
 
+    def test_invalid_content_length_is_client_error_and_followup_request_works(self):
+        connection = http.client.HTTPConnection("127.0.0.1", self.core.port, timeout=10)
+        headers = {
+            "X-Resume-Token": self.core.token,
+            "Content-Type": "application/json",
+            "Content-Length": "not-a-number",
+        }
+        try:
+            connection.request("PUT", "/api/resume", body="{}", headers=headers)
+            response = connection.getresponse()
+            self.assertEqual(response.status, 400)
+            self.assertIn("Content-Length", response.read().decode("utf-8"))
+
+            connection.close()
+            connection = http.client.HTTPConnection("127.0.0.1", self.core.port, timeout=10)
+            connection.request("GET", "/api/events", headers={
+                "X-Resume-Token": self.core.token,
+            })
+            response = connection.getresponse()
+            payload = response.read()
+            self.assertEqual(response.status, 200, payload)
+            self.assertIn("events", json.loads(payload))
+        finally:
+            connection.close()
+
 
 if __name__ == "__main__":
     unittest.main()

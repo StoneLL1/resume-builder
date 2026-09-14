@@ -670,7 +670,17 @@ class _Handler(BaseHTTPRequestHandler):
         raise ServeError(403, f"Origin 不被允许：{origin!r}。")
 
     def _read_json_body(self) -> dict:
-        length = int(self.headers.get("Content-Length") or 0)
+        raw_length = self.headers.get("Content-Length")
+        try:
+            length = int(raw_length or 0)
+        except (TypeError, ValueError):
+            # The body cannot be framed reliably, so do not leave unread bytes
+            # on a keep-alive connection where they could corrupt the next request.
+            self.close_connection = True
+            raise ServeError(400, "Content-Length 必须是非负整数。")
+        if length < 0:
+            self.close_connection = True
+            raise ServeError(400, "Content-Length 必须是非负整数。")
         if length <= 0:
             raise ServeError(400, "请求体不能为空（需要 JSON）。")
         if length > MAX_BODY_BYTES:

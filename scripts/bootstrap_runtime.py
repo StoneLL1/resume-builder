@@ -8,6 +8,8 @@ source of truth in assets/runtime-manifest.json.
 from __future__ import annotations
 
 import argparse
+import copy
+import contextlib
 import hashlib
 import json
 import os
@@ -125,14 +127,30 @@ def download(artifact: dict, cache_dir: Path, mirror: str | None, force: bool = 
         print(f"[bootstrap] 使用已校验缓存：{target.name}")
         return target
 
+    offline_dir = os.environ.get("RESUME_BUILDER_OFFLINE_DIR")
+    if offline_dir:
+        source = Path(offline_dir).expanduser().resolve() / artifact["filename"]
+        if not source.is_file() or sha256(source) != expected:
+            raise BootstrapError(f"离线包缺少或校验失败：{artifact['filename']}。请补齐清单对应文件；离线模式不会访问网络。")
+        if source != target.resolve():
+            shutil.copy2(source, target)
+        return target
+
     errors: list[str] = []
     for url in _resolved_urls(artifact["url"], mirror):
         part = target.with_name(f".{target.name}.{uuid.uuid4().hex}.part")
         try:
             print(f"[bootstrap] 下载：{url}")
             request = Request(url, headers={"User-Agent": "resume-builder-v2-bootstrap/1"})
-            with urlopen(request, timeout=60) as response, part.open("wb") as out:
-                shutil.copyfileobj(response, out, length=1024 * 1024)
+            deadline = time.monotonic() + 180
+            with urlopen(request, timeout=20) as response, part.open("wb") as out:
+                while True:
+                    if time.monotonic() >= deadline:
+                        raise BootstrapError(f"下载超时：{artifact['filename']}（180 秒）。可使用离线包或配置镜像。")
+                    chunk = response.read(64 * 1024)
+                    if not chunk:
+                        break
+                    out.write(chunk)
             actual = sha256(part)
             if actual != expected:
                 raise BootstrapError(
@@ -273,6 +291,13 @@ def install_runtime(manifest: dict, home: Path, key: str,
             raise BootstrapError(f"Typst 安装后版本检查失败：{version!r}")
         print(f"[bootstrap] Typst 安装完成：{version}")
 
+    # Persist the completed binary before downloading optional fonts. A failed
+    # font fetch must not force reinstalling a healthy runtime next time.
+    old_state.update({"python": {"version": platform_mod.python_version(), "executable": sys.executable},
+                      "typst": {"version": typst["version"], "archive_sha256": artifact["sha256"],
+                                "executable": str(typst_path)}})
+    _write_state(state_path, old_state)
+
     font_dir = home / "fonts"
     font_dir.mkdir(parents=True, exist_ok=True)
     installed_fonts: list[dict] = []
@@ -302,6 +327,37 @@ def install_runtime(manifest: dict, home: Path, key: str,
     return state
 
 
+def scoped_manifest(manifest: dict, template: str | None = None, all_fonts: bool = False) -> dict:
+    """Base runtime has no fonts; only download the selected template's families."""
+    result = copy.deepcopy(manifest)
+    if all_fonts:
+        return result
+    families = set()
+    if template:
+        import render
+        spec = render.load_manifest(template)
+        families = {family for combo in spec["fonts"].values() for family in combo["latin"] + combo["cjk"]}
+    result["fonts"]["files"] = [font for font in result["fonts"]["files"] if font["family"] in families]
+    return result
+
+
+def template_problems(template: str | None, home: Path, key: str, manifest: dict) -> list[str]:
+    if not template:
+        return []
+    import render
+    spec = render.load_manifest(template)
+    typst = home / "bin" / manifest["typst"]["platforms"][key]["executable_name"]
+    try:
+        available = render.run_typst(str(typst), ["fonts", "--font-path", str(home / "fonts"),
+                                     "--font-path", str(ROOT / "assets" / "templates" / template)], str(ROOT))
+    except render.RenderError as exc:
+        return [str(exc)]
+    families = {s.strip().casefold() for s in available.splitlines()}
+    required = {f for c in spec["fonts"].values() for f in c["latin"] + c["cjk"]}
+    missing = sorted(f for f in required if f.casefold() not in families)
+    return ["模板仍缺少原版字体：" + ", ".join(missing) + "。系统字体需在本机合法安装，或返回画廊选择其他模板。"] if missing else []
+
+
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
@@ -317,14 +373,23 @@ def main() -> int:
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--check", action="store_true", help="只校验现有运行时，不下载或修改")
     parser.add_argument("--json", action="store_true")
+    scope = parser.add_mutually_exclusive_group()
+    scope.add_argument("--template", help="仅准备指定模板的开放字体，并检查系统字体")
+    scope.add_argument("--all-fonts", action="store_true", help="准备全部开放字体（默认仅基础运行时）")
+    parser.add_argument("--offline-dir", default=os.environ.get("RESUME_BUILDER_OFFLINE_DIR"),
+                        help="按 manifest 文件名存放的离线 artifacts 目录；启用后禁止联网")
     args = parser.parse_args()
 
     try:
         manifest = load_manifest(Path(args.manifest).resolve())
+        manifest = scoped_manifest(manifest, args.template, args.all_fonts)
+        if args.offline_dir:
+            os.environ["RESUME_BUILDER_OFFLINE_DIR"] = str(Path(args.offline_dir).expanduser().resolve())
         home = Path(args.runtime_home).expanduser().resolve() if args.runtime_home else runtime_home()
         key = args.platform or platform_key()
         if args.check:
             problems = check_runtime(manifest, home, key)
+            problems += template_problems(args.template, home, key, manifest)
             result = {"ok": not problems, "runtime_home": str(home), "platform": key, "problems": problems}
             if args.json:
                 print(json.dumps(result, ensure_ascii=False))
@@ -333,13 +398,17 @@ def main() -> int:
             else:
                 print(f"[bootstrap] 自检通过：{home}")
             return 1 if problems else 0
-        state = install_runtime(manifest, home, key, mirror=args.mirror, force=args.force)
+        with contextlib.redirect_stdout(sys.stderr):
+            state = install_runtime(manifest, home, key, mirror=args.mirror, force=args.force)
+        problems = template_problems(args.template, home, key, manifest)
+        if problems:
+            raise BootstrapError("\n".join(problems))
         if args.json:
             print(json.dumps({"ok": True, "runtime_home": str(home), "state": state}, ensure_ascii=False))
         else:
             print(f"[bootstrap] 完成：{home}")
         return 0
-    except BootstrapError as exc:
+    except (BootstrapError, OSError, ValueError, RuntimeError) as exc:
         if args.json:
             print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False))
         else:

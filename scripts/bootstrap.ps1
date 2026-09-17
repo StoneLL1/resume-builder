@@ -13,6 +13,9 @@
 param(
     [string]$RuntimeHome = $env:RESUME_BUILDER_HOME,
     [string]$Mirror = $env:RESUME_BUILDER_DOWNLOAD_MIRROR,
+    [string]$OfflineDir = $env:RESUME_BUILDER_OFFLINE_DIR,
+    [string]$Template,
+    [switch]$AllFonts,
     [switch]$Force,
     [switch]$Check
 )
@@ -43,7 +46,33 @@ if ($Manifest.schema_version -ne 1) {
     throw 'runtime-manifest.json 的 schema_version 必须为 1。'
 }
 
+function Test-CompatiblePython([string]$Executable, [string[]]$PrefixArgs = @()) {
+    $info = New-Object System.Diagnostics.ProcessStartInfo
+    $info.FileName = $Executable
+    $info.Arguments = (($PrefixArgs -join ' ') + ' -c "import sys; print(''ok'' if sys.version_info >= (3, 10) else ''old'')"').Trim()
+    $info.UseShellExecute = $false
+    $info.CreateNoWindow = $true
+    $info.RedirectStandardOutput = $true
+    $info.RedirectStandardError = $true
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $info
+    try {
+        [void]$process.Start()
+        $stdout = $process.StandardOutput.ReadToEndAsync()
+        $stderr = $process.StandardError.ReadToEndAsync()
+        if (-not $process.WaitForExit(10000)) { $process.Kill(); return $false }
+        return ($process.ExitCode -eq 0 -and $stdout.Result.Trim() -eq 'ok')
+    } catch { return $false }
+    finally { $process.Dispose() }
+}
+
 function Find-CompatiblePython {
+    $managedExe = Join-Path $RuntimeHome ("python-$($Manifest.python.version)-$ArchKey\python.exe")
+    if (Test-Path -LiteralPath $managedExe -PathType Leaf) {
+        if (Test-CompatiblePython $managedExe) {
+            return @{ Exe = $managedExe; Args = @(); Managed = $true }
+        }
+    }
     $candidates = @(
         @{ Name = 'python'; Args = @() },
         @{ Name = 'python3'; Args = @() },
@@ -53,9 +82,9 @@ function Find-CompatiblePython {
         $command = Get-Command $candidate.Name -ErrorAction SilentlyContinue | Select-Object -First 1
         if (-not $command) { continue }
         $candidateExe = $command.Source
+        if ($candidateExe -like '*\WindowsApps\*') { continue } # Store aliases can launch UI or block
         $candidateArgs = @($candidate.Args)
-        $output = & $candidateExe @candidateArgs -c "import sys; print('ok' if sys.version_info >= (3, 10) else 'old')" 2>$null
-        if ($LASTEXITCODE -eq 0 -and ($output | Select-Object -Last 1) -eq 'ok') {
+        if (Test-CompatiblePython $candidateExe $candidateArgs) {
             return @{ Exe = $command.Source; Args = @($candidate.Args); Managed = $false }
         }
     }
@@ -87,6 +116,15 @@ function Get-VerifiedDownload($Artifact) {
         }
     }
     $errors = @()
+    if ($OfflineDir) {
+        $source = Join-Path $OfflineDir $Artifact.filename
+        if (-not (Test-Path -LiteralPath $source -PathType Leaf) -or
+            (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash.ToLowerInvariant() -ne $Artifact.sha256) {
+            throw "离线包缺少或校验失败：$($Artifact.filename)。离线模式不会联网。"
+        }
+        if ([IO.Path]::GetFullPath($source) -ne [IO.Path]::GetFullPath($target)) { Copy-Item -LiteralPath $source -Destination $target }
+        return $target
+    }
     foreach ($url in (Resolve-DownloadUrls $Artifact.url)) {
         $part = Join-Path $downloadDir ('.' + $Artifact.filename + '.' + [Guid]::NewGuid().ToString('N') + '.part')
         try {
@@ -114,19 +152,18 @@ function Install-ManagedPython {
     $property = $Manifest.python.platforms.PSObject.Properties[$PlatformKey]
     if (-not $property) { throw "运行时清单缺少 Python 平台：$PlatformKey" }
     $artifact = $property.Value
-    $archive = Get-VerifiedDownload $artifact
-    $tar = Get-Command tar.exe -ErrorAction SilentlyContinue
-    if (-not $tar) { $tar = Get-Command tar -ErrorAction SilentlyContinue }
-    if (-not $tar) { throw '安装便携 Python 需要 Windows 自带的 tar.exe（Windows 10/11 默认提供）。' }
-
     $pythonRoot = Join-Path $RuntimeHome ("python-$($Manifest.python.version)-$ArchKey")
     $expectedExe = Join-Path $pythonRoot 'python.exe'
     if (-not $Force -and (Test-Path -LiteralPath $expectedExe -PathType Leaf)) {
-        $ok = & $expectedExe -c "import sys; print('ok' if sys.version_info >= (3, 10) else 'old')" 2>$null
-        if ($LASTEXITCODE -eq 0 -and ($ok | Select-Object -Last 1) -eq 'ok') {
+        if (Test-CompatiblePython $expectedExe) {
             return @{ Exe = $expectedExe; Args = @(); Managed = $true }
         }
     }
+
+    $archive = Get-VerifiedDownload $artifact
+    $tar = Get-Command tar.exe -ErrorAction SilentlyContinue
+    if (-not $tar) { $tar = Get-Command tar -ErrorAction SilentlyContinue }
+    if (-not $tar) { throw '安装便携 Python 需要 Windows 自带的 tar.exe。' }
 
     [IO.Directory]::CreateDirectory($RuntimeHome) | Out-Null
     $staging = Join-Path $RuntimeHome ('.python-staging-' + [Guid]::NewGuid().ToString('N'))
@@ -167,6 +204,9 @@ $helperArgs = @(
 if ($Mirror) { $helperArgs += @('--mirror', $Mirror) }
 if ($Force) { $helperArgs += '--force' }
 if ($Check) { $helperArgs += '--check' }
+if ($Template) { $helperArgs += @('--template', $Template) }
+if ($AllFonts) { $helperArgs += '--all-fonts' }
+if ($OfflineDir) { $helperArgs += @('--offline-dir', $OfflineDir) }
 
 $PythonExe = $Python.Exe
 $PythonPrefixArgs = @($Python.Args)

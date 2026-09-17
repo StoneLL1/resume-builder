@@ -5,10 +5,8 @@
                                      [--timeout 秒] [--history]
 
 行为：
-- 默认只等待"新"事件（以启动时刻的 seq 为基线）。正确顺序是：Agent 先
-  启动本等待，再引导用户操作页面，模板选择才能可靠唤醒 Agent。
-- ``--history`` 用于恢复场景：skill 再次调用时，若存在尚未消费的匹配
-  事件（例如服务关闭期间用户已选过模板），立即返回最后一条。
+- 默认先读取持久游标之后的最新未消费事件，再等新事件，不漏掉先点击的选择。
+- ``--history`` 显式重放最近匹配事件，用于 Agent 接收后中断的恢复。
 - stdout 输出一行 JSON（事件对象），供 Agent 解析；人读信息走 stderr。
 
 退出码：0 = 等到事件；124 = 超时；1 = 错误。
@@ -32,7 +30,8 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=3600.0,
                         help="最长等待秒数，0 表示无限等（默认 3600）")
     parser.add_argument("--history", action="store_true",
-                        help="先查历史事件，有匹配立即返回最后一条（会话恢复用）")
+                        help="显式重放最近匹配事件（会话恢复用）")
+    parser.add_argument("--new-only", action="store_true", help="仅等命令启动后的事件（诊断用）")
     parser.add_argument("--poll", type=float, default=0.25, help="轮询间隔秒（默认 0.25）")
     args = parser.parse_args()
 
@@ -42,7 +41,7 @@ def main() -> int:
           file=sys.stderr)
     event = session_mod.wait_for_event(args.project_dir, types,
                                        timeout=timeout, poll=args.poll,
-                                       include_history=args.history)
+                                       include_history=not args.new_only, replay=args.history)
     if event is None:
         print("[wait] 超时，没有等到匹配事件。", file=sys.stderr)
         return 124

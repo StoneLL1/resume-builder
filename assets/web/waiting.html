@@ -77,6 +77,8 @@ function renderState(state) {
   const failed = (state.error && state.error.message) || (render && render.ok === false && render.error);
   const box = $('#errBox');
   if (failed) {
+    $('#spinner').classList.add('hidden');
+    $('#waitTitle').textContent = '排版未完成';
     box.hidden = false;
     $('#errText').textContent = '出错了：' + failed + '\n可重试渲染；若仍失败，请回到对话让 Agent 修复。';
   } else {

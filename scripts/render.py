@@ -4,12 +4,13 @@
     python scripts/render.py <项目目录> [--template <模板ID>] [--typst <typst路径>] [--json]
 
 项目目录即 `<用途>/` 目录（内含 resume.json），产物写入
-`<项目目录>/work/build/`：
+`<项目目录>/work/build/<revision>/`（成功后原子更新 current.json 指针）：
     page-{n}.svg      各页真实渲染（浏览器编辑器直接展示）
     resume.pdf        正式 PDF（导出时复制为规范文件名）
     layout-map.json   字段 ID → 页面矩形热区（点击编辑的依据）
     resume-data.typ   由 resume.json 自动生成，勿手改
-    render-result.json 本次渲染摘要（页数、字段数、耗时；失败时 ok=false + 错误）
+    render-result.json 本次成功渲染摘要（页数、字段数、耗时）
+最新尝试的摘要写入 work/render-result.json；失败不会覆盖上次成功的预览。
 
 模板与渲染约定：
 - 模板目录 assets/templates/<id>/（manifest.json + template.typ + preview.png
@@ -30,6 +31,10 @@ import shutil
 import subprocess
 import sys
 import time
+import hashlib
+import uuid
+from pathlib import Path
+from local_io import file_lock, write_json
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import resume_model  # noqa: E402
@@ -105,7 +110,9 @@ def check_original_fonts(typst: str, manifest: dict, build_dir: str) -> None:
     missing = sorted(family for family in required if family.casefold() not in available)
     if missing:
         raise RenderError(f"模板 {manifest['id']} 缺少原版字体：{', '.join(missing)}。"
-                          "请运行 bootstrap 安装开放字体；系统字体需在本机合法安装。不会替换原字体。")
+                          f"\n请使用 bootstrap_runtime.py --template {manifest['id']} 安装此模板的开放字体。"
+                          f"\n当前运行时目录：{runtime_home()}"
+                          "\n系统字体需在本机合法安装，或返回画廊选择其他模板。不会替换原字体。")
 
 
 # ── 模板契约（Batch 3）：manifest.json 加载与校验 ─────────────────────────────
@@ -331,8 +338,19 @@ def find_typst(explicit: str | None = None) -> str:
 
 def run_typst(typst: str, args: list[str], cwd: str) -> str:
     cmd = [typst, *args]
-    proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
-                          encoding="utf-8", errors="replace")
+    try:
+        timeout = float(os.environ.get("RESUME_BUILDER_TYPST_TIMEOUT", "30"))
+        if not 0 < timeout <= 300:
+            raise ValueError()
+    except ValueError:
+        raise RenderError("RESUME_BUILDER_TYPST_TIMEOUT 必须是 0–300 秒之间的正数。")
+    try:
+        proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        raise RenderError(f"Typst {args[0]} 超过 {timeout:g} 秒，已终止。请检查字体、模板和本地运行时后重试。") from exc
+    except OSError as exc:
+        raise RenderError(f"无法启动 Typst：{exc}。请检查运行时路径及执行权限。") from exc
     if proc.returncode != 0:
         raise RenderError(f"命令失败：{' '.join(cmd)}\n" + format_typst_error(proc.stdout + proc.stderr))
     if "unknown font family" in proc.stderr or "does not contain the glyph" in proc.stderr:
@@ -649,9 +667,72 @@ MAIN_TYP = """// 本文件由 render.py 生成。
 """
 
 
+def current_build_dir(project_dir: str, revision: str | None = None) -> str:
+    root = Path(project_dir).resolve() / "work" / "build"
+    if revision is None:
+        try:
+            revision = json.loads((root / "current.json").read_text(encoding="utf-8-sig"))["revision"]
+        except FileNotFoundError:
+            return str(root)  # older projects remain readable
+    if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{32}", revision):
+        raise RenderError("预览版本无效，请重新渲染。")
+    return str(root / revision)
+
+
 def render_project(project_dir: str, template_id: str | None = None,
                    typst_path: str | None = None, keep_failed: bool = True,
                    templates_dir: str | None = None) -> dict:
+    """Build in isolation; publish only complete results, retaining the last preview."""
+    work = Path(project_dir).resolve() / "work"
+    build_root = work / "build"
+    build_root.mkdir(parents=True, exist_ok=True)
+    revision = uuid.uuid4().hex
+    build = build_root / revision
+    started = time.monotonic()
+    try:
+        with file_lock(work / "render.lock", timeout=5):
+            result = _render_into(project_dir, template_id, typst_path, keep_failed,
+                                  templates_dir, str(build))
+            result.update(revision=revision, build_dir=str(build), finished_at=time.time_ns())
+            layout_path = build / "layout-map.json"
+            layout = json.loads(layout_path.read_text(encoding="utf-8"))
+            layout["revision"] = revision
+            write_json(layout_path, layout)
+            _write_render_result(str(build), result)
+            write_json(build_root / "current.json", {"revision": revision})
+            write_json(work / "render-result.json", result)
+            # Keep recent immutable previews for in-flight browser requests.
+            try:
+                old = sorted((p for p in build_root.iterdir() if p.is_dir()
+                              and re.fullmatch(r"[0-9a-f]{32}", p.name)),
+                             key=lambda p: p.stat().st_mtime, reverse=True)
+            except OSError:
+                old = []
+            for path in old[5:]:
+                if path.name != revision and path.resolve().parent == build_root.resolve():
+                    try:
+                        shutil.rmtree(path)
+                    except OSError:
+                        pass  # e.g. Windows browser/antivirus still reading a file
+            return result
+    except (RenderError, resume_model.ResumeModelError, OSError, ValueError) as exc:
+        message = str(exc)
+        result = {"ok": False, "error": message, "finished_at": time.time_ns(),
+                  "elapsed_ms": round((time.monotonic() - started) * 1000)}
+        write_json(work / "render-result.json", result)
+        # Never delete the current successful build; failed temporary build only.
+        try:
+            is_current = Path(current_build_dir(project_dir)) == build
+        except (OSError, ValueError, RenderError):
+            is_current = True  # never remove a version when publication is uncertain
+        if not is_current and build.is_dir() and build.resolve().parent == build_root.resolve():
+            shutil.rmtree(build, ignore_errors=True)
+        raise RenderError(message) from exc
+
+
+def _render_into(project_dir: str, template_id: str | None = None,
+                   typst_path: str | None = None, keep_failed: bool = True,
+                   templates_dir: str | None = None, build_dir: str | None = None) -> dict:
     t0 = time.time()
     project_dir = os.path.abspath(project_dir)
     templates_dir = templates_dir or TEMPLATES_DIR
@@ -670,16 +751,8 @@ def render_project(project_dir: str, template_id: str | None = None,
         raise RenderError("resume.json 与模板能力不匹配：\n- " + "\n- ".join(incompatible))
     entry = manifest.get("entry", "template.typ")
 
-    build_dir = os.path.join(project_dir, "work", "build")
+    build_dir = build_dir or os.path.join(project_dir, "work", "build")
     os.makedirs(build_dir, exist_ok=True)
-    # 整体清空 build：换模板时旧模板的多余文件、页数变少时的旧 page-N.svg
-    # 一并消失，杜绝新旧产物混排。
-    for name in os.listdir(build_dir):
-        target = os.path.join(build_dir, name)
-        if os.path.isdir(target):
-            shutil.rmtree(target)
-        else:
-            os.unlink(target)
 
     # 复制模板目录 → build（多文件模板整体可用）
     for root, _dirs, files in os.walk(template_dir):
@@ -687,7 +760,7 @@ def render_project(project_dir: str, template_id: str | None = None,
         dest_root = build_dir if rel == "." else os.path.join(build_dir, rel)
         os.makedirs(dest_root, exist_ok=True)
         for fname in files:
-            if fname == "manifest.json" and rel == ".":
+            if (fname == "manifest.json" and rel == ".") or fname.startswith("preview"):
                 continue
             shutil.copy2(os.path.join(root, fname), os.path.join(dest_root, fname))
 
@@ -738,17 +811,21 @@ def render_project(project_dir: str, template_id: str | None = None,
         "page_target": data["meta"]["page_target"],
         "fields": len(layout_map["fields"]),
         "elapsed_ms": round((time.time() - t0) * 1000),
+        "content_hash": hashlib.sha256(json.dumps(data, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest(),
+        "export_filename": resume_model.export_filename(data),
     }
     _write_render_result(build_dir, result)
     return result
 
 
 def _write_render_result(build_dir: str, result: dict) -> None:
-    with open(os.path.join(build_dir, "render-result.json"), "w", encoding="utf-8", newline="\n") as fh:
-        json.dump(result, fh, ensure_ascii=False, indent=2)
+    write_json(os.path.join(build_dir, "render-result.json"), result)
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("project_dir", help="项目目录（内含 resume.json）")
     parser.add_argument("--template", help="覆盖 meta.template_id")

@@ -1,7 +1,7 @@
 # 编辑与导出阶段（阶段 D / F）：与网页编辑器协作
 
 > 读取时机：`set-stage editor` 放行后（阶段 D）；收到 `editing_done` 事件后做
-> 终检与导出（阶段 F）。本文路径相对 skill 根目录，`<项目目录>` 指用途目录。
+> 终检与导出（阶段 F）。本文命令中的 `python` 是实际解释器绝对路径；Windows 可用 `scripts/run.ps1`，macOS 可用 `scripts/run.sh` 调用同名脚本。本文路径相对 skill 根目录，`<项目目录>` 指用途目录。
 
 ## 1. 网页编辑器能力（Agent 引导用户用，边界要讲准）
 
@@ -33,7 +33,7 @@
 ## 3. 等待完成与终检（阶段 F 入口）
 
 ```bash
-python scripts/wait_for_event.py "<项目目录>"
+python scripts/wait_for_event.py "<项目目录>" --timeout 60
 ```
 
 - 等到 `editing_done`（用户点了「完成」）→ 读取最新 resume.json，按 rendering-stage.md §4 补查尚未检查的修改与受影响页面；当前版本已检查通过则直接进入导出。
@@ -63,7 +63,7 @@ python scripts/wait_for_event.py "<项目目录>"
 
 | 现象 | 处理 |
 |---|---|
-| 等待页卡在"生成中" | 用户点「重试渲染」；或 Agent 手动 `render.py --json` 看错误（网页重试成功会自动进入编辑器，Agent 仍需核对所选模板并完成 rendering-stage.md §4 的检查） |
+| 等待页卡在"生成中" | 查看 `work/render-result.json`、`work/render-error.log` 和当前会话选择；先修具体错误再重试。JSON 仍为旧模板时先由 Agent 完成适配。 |
 | 渲染失败 toast | 指引见 rendering-stage.md §7；对话里修 JSON 即触发自动重渲染 |
-| 网页显示旧内容 | 服务没跑或被停了——重启 serve.py（会话自动恢复） |
-| Agent 改了 JSON 网页没刷新 | 同上；确认服务进程还活着，页面事件轮询每 1.5s 一轮，稍等 |
+| 网页显示旧内容 | 查看页面连接提示与 `work/server.json`，用最新带令牌的链接重开。服务停止才重启；不要同时开两个服务。 |
+| Agent 改了 JSON 网页没刷新 | 检查最近渲染结果与连接；文件监听每 0.4 秒、页面轮询默认每 1.2 秒。页面还会核对当前状态，可恢复漏掉的完成事件。 |

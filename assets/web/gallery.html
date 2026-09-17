@@ -171,6 +171,8 @@ function renderGrid() {
       </button>
       <span class="tpl-name">${esc(t.name)}</span>
       <span class="tpl-desc">${esc(t.description)}</span>
+      ${t.font_status === 'missing' ? `<span class="tpl-desc">需准备字体：${esc(t.missing_fonts.join('、'))}。选定后由 Agent 检查。</span>` : ''}
+      ${t.font_status === 'unknown' ? '<span class="tpl-desc">字体尚未检查，选定后由 Agent 准备。</span>' : ''}
       <span class="tpl-tags">${t.tags.map(g => `<span class="tag">${esc(g)}</span>`).join('')}</span>
       <span class="tpl-license" title="${esc(t.upstream ? t.upstream.repo : '本地参考模板')}">${esc(licenseLabel(t))}${t.upstream ? ' · ' + esc(t.upstream.repo) : ''}</span>
       <button class="btn btn-secondary tpl-pick" data-action="select" type="button" aria-pressed="false">选中这套</button>

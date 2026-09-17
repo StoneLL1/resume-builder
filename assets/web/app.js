@@ -8,8 +8,11 @@
 const RB = {
   token: (function () {
     const qs = new URLSearchParams(location.search);
-    const t = qs.get('token') || sessionStorage.getItem('rb-token') || '';
-    if (t) sessionStorage.setItem('rb-token', t);
+    let t = qs.get('token') || '';
+    try {
+      t = t || sessionStorage.getItem('rb-token') || '';
+      if (t) sessionStorage.setItem('rb-token', t);
+    } catch (_) { /* URL token works when storage is unavailable. */ }
     return t;
   })(),
   /* <img> 等标签发不了自定义头，带令牌的资源 URL 用查询参数补（服务端两种方式都认） */
@@ -20,20 +23,46 @@ const RB = {
 
 /* ── API 客户端（失败抛 Error，message 面向用户） ── */
 async function api(path, opts = {}) {
-  const init = Object.assign({ headers: { 'X-Resume-Token': RB.token } }, opts);
+  const { timeoutMs = 10000, ...options } = opts;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const init = { ...options, signal: controller.signal,
+    headers: { 'X-Resume-Token': RB.token, ...(options.headers || {}) } };
   if (init.body && typeof init.body === 'object') {
     init.headers['Content-Type'] = 'application/json';
     init.body = JSON.stringify(init.body);
   }
-  let r;
   try {
-    r = await fetch(path + (path.includes('?') ? '&' : '?') + 't=' + Date.now(), init);
+    const r = await fetch(path + (path.includes('?') ? '&' : '?') + 't=' + Date.now(), init);
+    const data = await r.json();
+    if (!r.ok) {
+      const error = new Error(data.error || (path + ' → HTTP ' + r.status));
+      error.status = r.status;
+      throw error;
+    }
+    return data;
   } catch (e) {
+    if (e.status) throw e;
+    if (e.name === 'AbortError') throw new Error('本地服务响应超时。内容可能已保存，请重连后核对；不要反复点击。');
     throw new Error('无法连接本地服务（' + e.message + '）');
+  } finally {
+    clearTimeout(timer);
   }
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.error || (path + ' → HTTP ' + r.status));
-  return data;
+}
+
+function showConnectionError(error) {
+  let banner = document.getElementById('connectionError');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'connectionError';
+    banner.className = 'connection-error banner banner-error';
+    banner.setAttribute('role', 'alert');
+    document.body.appendChild(banner);
+  }
+  banner.hidden = !error;
+  banner.textContent = error ? (error.status === 401
+    ? '服务会话已改变。请从 Agent 提供的最新完整链接重新打开页面。'
+    : '与本地服务的连接中断，正在重连。' + error.message) : '';
 }
 
 /* ── 阶段工具 ── */
@@ -62,22 +91,23 @@ function startEventPolling(handlers, intervalMs = 1200) {
     if (stopped) return;
     try {
       const res = await api('/api/events?cursor=' + (cursor === null ? 0 : cursor));
+      showConnectionError(null);
       if (cursor === null) {
         cursor = res.cursor;  // 基线：本次响应里的事件视为历史，不派发
       } else {
         cursor = res.cursor;
         for (const ev of res.events || []) {
           for (const h of handlers) {
-            try { h(ev, res.state); } catch (e) { console.error('event handler failed', e); }
+            try { await h(ev, res.state); } catch (e) { console.error('event handler failed', e); }
           }
         }
       }
       // 没有新事件也把最新 state 交给只关心状态的订阅者（null 事件）
       for (const h of handlers) {
-        try { h(null, res.state); } catch (e) { console.error('state handler failed', e); }
+        try { await h(null, res.state); } catch (e) { console.error('state handler failed', e); }
       }
     } catch (e) {
-      /* 服务重启等瞬断：下一轮重试 */
+      showConnectionError(e);
     }
     if (!stopped) setTimeout(loop, intervalMs);
   })();

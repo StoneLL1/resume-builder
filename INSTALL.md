@@ -28,7 +28,7 @@ Codex 的目录说明见 [官方文档](https://developers.openai.com/codex/skil
 只有需要从远端获取、且用户没有指定本地副本时，才将仓库克隆到一个新的暂存目录：
 
 ```sh
-git clone https://github.com/StoneLL1/resume-builder.git "<新的暂存目录>"
+git clone --depth 1 https://github.com/StoneLL1/resume-builder.git "<新的暂存目录>"
 ```
 
 检查仓库根目录；若 skill 被放在子目录中，再定位到实际入口。安装前必须确认以下组件存在：
@@ -39,6 +39,9 @@ references/Resume-Writing-Guide-LLM.md
 scripts/bootstrap.ps1
 scripts/bootstrap.sh
 scripts/bootstrap_runtime.py
+scripts/local_io.py
+scripts/run.ps1
+scripts/run.sh
 scripts/serve.py
 scripts/render.py
 assets/runtime-manifest.json
@@ -97,7 +100,7 @@ cd "$skill_target"
 |---|---|
 | Python ≥ 3.10 | 复用已有兼容版本；找不到时，由系统对应的 bootstrap 安装用户级 Python。 |
 | Typst | 由 bootstrap 安装清单中的版本，当前为 0.15.1。 |
-| 开放字体 | bootstrap 下载到用户缓存并校验 SHA-256。 |
+| 开放字体 | 选定模板后用 `--template <ID>` 按需安装并校验；默认安装不下载字体。`--all-fonts` 才准备全部开放字体。 |
 | 模板与 Typst 包 | 已随 skill 提供，保留本地文件及许可证。 |
 
 不需要 Node.js、npm 或 XeLaTeX；日常脚本只使用 Python 标准库，不要额外创建前端工程或运行 `pip install`。
@@ -136,9 +139,40 @@ bash scripts/bootstrap.sh
 
 Windows 脚本也支持 `-RuntimeHome`、`-Mirror`，macOS 支持 `--runtime-home`、`--mirror`。按用户配置使用镜像，不修改清单来绕过哈希校验。已有有效缓存可直接复用。
 
+### 按需字体、统一启动与离线安装
+
+Windows 不要求全局 `python` 可用，统一使用：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run.ps1 bootstrap_runtime --template orange-chinese --check --json
+# 缺开放字体时，去掉 --check 安装；缺系统字体时按错误处理。
+powershell -ExecutionPolicy Bypass -File scripts/run.ps1 serve "<项目目录>"
+```
+
+macOS 对应为 `bash scripts/run.sh bootstrap_runtime --template orange-chinese --check --json` 和 `bash scripts/run.sh serve "<项目目录>"`。首次 bootstrap 完成后，launcher 会读取运行时记录的解释器。自定义 RuntimeHome 必须在安装和启动时保持一致。
+
+仅大陆网络不保证 GitHub、raw.githubusercontent.com 或海外字体站可达。本项目没有内置经过运营商验证的国内镜像；代理环境变量也不覆盖 git clone 和安装说明入口。可用完整本地发布目录 + 离线 artifacts，避免临时寻找公共代理或修改哈希。
+
+在能够获取依赖的机器上，使用实际 Python 准备目标平台的固定文件：
+
+```sh
+python scripts/prepare_offline.py --platform windows-x64 --all-fonts --output "<离线目录>"
+# 只准备一套模板时把 --all-fonts 换为 --template orange-chinese。
+# 加 --list 仅列出文件名、URL、校验值，不下载。
+```
+
+将离线目录连同完整 skill 发布目录传到目标机，然后执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1 -OfflineDir "<离线目录>"
+powershell -ExecutionPolicy Bypass -File scripts/bootstrap.ps1 -OfflineDir "<离线目录>" -Template orange-chinese
+```
+
+macOS 使用 `bootstrap.sh --offline-dir "<离线目录>"`，并选择对应的 mac-x64/mac-arm64 artifacts。`RESUME_BUILDER_OFFLINE_DIR` 也可指定目录。离线模式只读取本地文件并核验 SHA-256，缺文件时明确失败，不会退回联网；需准备的 Python 归档已包含在清单里。系统授权字体不包含在离线包中。保留第三方许可；不要把用户真实简历放进分发包。
+
 ### 原版系统字体
 
-bootstrap 检查不包含所有系统字体。Miku CV 需要 Segoe UI Emoji，Unique CV 需要 KaiTi，SweetGargamel 需要 Times New Roman 和 STKaiti；使用本机已合法安装的字体，不随 skill 复制分发，也不静默替换字体。
+基础 bootstrap 检查不包含系统字体；指定 `--template <模板ID> --check` 时会检查该模板要求的原版字体。Miku CV 需要 Segoe UI Emoji，Unique CV 需要 KaiTi，SweetGargamel 需要 Times New Roman 和 STKaiti；使用本机已合法安装的字体，不随 skill 复制分发，也不静默替换字体。
 
 安装结果中注明尚未满足的模板字体依赖；制作简历时，只检查用户所选模板的实际渲染。完整对应关系见 [模板注册表](assets/templates/registry.md) 和 [运行时说明](assets/runtime-NOTICES.md)。
 
@@ -148,7 +182,7 @@ bootstrap 检查不包含所有系统字体。Miku CV 需要 Segoe UI Emoji，Un
 
 1. `SkillTarget/SKILL.md` 存在，frontmatter 的 `name` 为 `resume-builder`；当前 Agent 能发现或显式加载该文件。
 2. 第 2 节的组件检查通过，`assets/templates/` 中中文与英文各有 9 套模板，预览文件齐全。
-3. 用实际解释器执行运行时检查，退出码为 0，JSON 中 `ok` 为 `true`、`problems` 为空数组。
+3. 用实际解释器执行基础运行时检查，退出码为 0，JSON 中 `ok` 为 `true`、`problems` 为空数组。此结果不等于所有模板字体已齐备；选定模板后必须用 `--template <ID>` 检查。
 
 ```sh
 # python 代表上一步确定的实际解释器；macOS 可能是 python3 或托管路径。

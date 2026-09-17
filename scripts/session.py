@@ -30,6 +30,7 @@ import re
 import sys
 import tempfile
 import time
+from local_io import file_lock, write_json
 
 SESSION_SCHEMA_VERSION = 1
 
@@ -116,11 +117,11 @@ def load_session(project_dir: str) -> dict | None:
     if not os.path.isfile(path):
         return None
     try:
-        with open(path, "r", encoding="utf-8") as fh:
+        with open(path, "rb") as fh:
             data = json.load(fh)
-    except json.JSONDecodeError as exc:
+    except (json.JSONDecodeError, UnicodeError) as exc:
         raise SessionError(
-            f"session.json 不是合法 JSON（第 {exc.lineno} 行：{exc.msg}）。"
+            f"session.json 不是合法 JSON：{exc}。"
             "文件未被修改；请修复或删除后重建会话。"
         )
     if not isinstance(data, dict) or data.get("schema_version") != SESSION_SCHEMA_VERSION:
@@ -190,14 +191,13 @@ def set_stage(project_dir: str, stage: str, note: str | None = None,
 
 def append_event(project_dir: str, type_: str, data: dict | None = None) -> dict:
     """追加一条事件（seq 单调递增），返回完整事件对象。"""
-    directory = work_dir(project_dir)
-    os.makedirs(directory, exist_ok=True)
-    events = _read_events_raw(project_dir)
-    seq = events[-1]["seq"] + 1 if events else 1
-    event = {"seq": seq, "at": _now(), "type": type_, "data": data or {}}
-    with open(events_path(project_dir), "a", encoding="utf-8", newline="\n") as fh:
-        fh.write(json.dumps(event, ensure_ascii=False) + "\n")
-    return event
+    with file_lock(os.path.join(work_dir(project_dir), "events.lock")):
+        events = _read_events_raw(project_dir)
+        seq = events[-1]["seq"] + 1 if events else 1
+        event = {"seq": seq, "at": _now(), "type": type_, "data": data or {}}
+        with open(events_path(project_dir), "a", encoding="utf-8", newline="\n") as fh:
+            fh.write(json.dumps(event, ensure_ascii=False) + "\n")
+        return event
 
 
 def _read_events_raw(project_dir: str) -> list[dict]:
@@ -228,19 +228,30 @@ def read_events(project_dir: str, after_seq: int = 0) -> list[dict]:
 
 def wait_for_event(project_dir: str, types: tuple[str, ...] | list[str],
                    timeout: float | None = None, poll: float = 0.25,
-                   include_history: bool = False) -> dict | None:
-    """阻塞等待新事件；返回第一条匹配事件，超时返回 None。
+                   include_history: bool = True, replay: bool = False) -> dict | None:
+    """Return latest unconsumed matching action, including clicks before startup.
 
-    基线 = 调用时刻的 seq（只等"新"事件）。Agent 应先起等待、再引导用户
-    操作；include_history=True 用于恢复场景（skill 再次调用时先查有没有
-    尚未处理的旧事件）。
+    A durable Agent cursor prevents replaying old choices. replay=True explicitly
+    recovers the latest matching action after an interrupted Agent turn.
     """
-    baseline = 0 if include_history else (_read_events_raw(project_dir) or [{"seq": 0}])[-1]["seq"]
+    cursor_path = os.path.join(work_dir(project_dir), "agent-cursor.json")
+    try:
+        with open(cursor_path, encoding="utf-8-sig") as fh:
+            baseline = int(json.load(fh)["seq"])
+    except (FileNotFoundError, ValueError, KeyError):
+        baseline = 0
+    if replay:
+        baseline = 0
+    elif not include_history:
+        baseline = (_read_events_raw(project_dir) or [{"seq": 0}])[-1]["seq"]
     deadline = None if timeout is None else time.monotonic() + timeout
     while True:
-        for event in read_events(project_dir, baseline):
-            if not types or event.get("type") in types:
-                return event
+        matches = [event for event in read_events(project_dir, baseline)
+                   if not types or event.get("type") in types]
+        if matches:
+            event = matches[-1]
+            write_json(cursor_path, {"seq": event["seq"]})
+            return event
         if deadline is not None and time.monotonic() >= deadline:
             return None
         time.sleep(poll)

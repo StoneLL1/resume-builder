@@ -30,6 +30,10 @@
 
 ## 3. 渲染
 
+下文 `python` 指 bootstrap 输出的实际解释器绝对路径。Windows 可用 `powershell -ExecutionPolicy Bypass -File scripts/run.ps1 render "<项目目录>" --json`；macOS 可用 `bash scripts/run.sh render "<项目目录>" --json`。
+
+首次使用某模板前，运行 `scripts/bootstrap_runtime.py --template <模板ID> --check --json`，缺开放字体时去掉 `--check` 安装；系统字体缺失需合法安装或由用户重选。不要在渲染服务和手动命令中同时编译。
+
 - **服务在跑（正常情况）**：直接保存 resume.json 即可——服务监听文件 mtime 自动重渲染，渲染完浏览器自动刷新。Agent 不需要手动触发。
 - 手动渲染 / 服务没跑（排错、CI）：
   ```bash
@@ -37,7 +41,7 @@
   ```
   输出 JSON 含实际页数、输出文件路径；Typst 编译错误会被格式化成中文提示（错误内容 + 位置）。
 
-产物在 `<项目目录>/work/build/`：`page-{n}.svg`（真实渲染预览）、`resume.pdf`、`layout-map.json`（点击热区，契约见 data-contract.md §8）。这些是中间产物，不是交付物。
+每次成功结果的 `build_dir` 指向 `<项目目录>/work/build/<revision>/`。`work/build/current.json` 指向当前成功版本，`work/render-result.json` 记录最近一次尝试（包括失败）。版本目录包含：`page-{n}.svg`（真实渲染预览）、`resume.pdf`、`layout-map.json`（点击热区，契约见 data-contract.md §8）。这些是中间产物，不是交付物。
 
 ## 4. 当前简历检查
 
@@ -45,7 +49,7 @@
 
 1. **事实**：新增或改写的事实对照 claim-map——只有 ✅ 内容，无 ❓/⛔ 混入；已核对且未改变的事实不重查。
 2. **表达**：确认改写后仍清楚呈现个人动作与证据，没有引入空话、重复或夸大，不重复给整份简历打分。
-3. **排版**：打开需检查页面的 `work/build/page-{n}.svg` 看实际图像（工具不能显示 SVG 时转为 PNG）。先看整页是否饱满均衡、重点突出，有无大块空白或第二页只剩几行；再看文字是否重叠、越界、缺字，标题是否与正文分离、断行是否零碎。不能仅凭编译成功或页数正确判断排版完成。
+3. **排版**：打开需检查页面的 `build_dir/page-{n}.svg` 看实际图像（工具不能显示 SVG 时转为 PNG）。先看整页是否饱满均衡、重点突出，有无大块空白或第二页只剩几行；再看文字是否重叠、越界、缺字，标题是否与正文分离、断行是否零碎。不能仅凭编译成功或页数正确判断排版完成。
 4. **页数与取舍**：实际页数符合约定的 `meta.page_target` 且 ≤ 2。超页或局部拥挤时，先删重复、精简措辞、合并同类信息，再取舍弱相关内容，保留核心成果和理解它所需的上下文。沿用上游字号与间距；内容量与模板不匹配时，向用户说明并建议调整页数或重选模板。
 5. ATS 关注点（用户在意时）：PDF 文本可选中复制（渲染层已保证，抽查即可）。
 
@@ -72,5 +76,8 @@ python scripts/session.py "<项目目录>" set-stage editor --note "排版检查
 
 ## 7. 排错
 
-- 渲染失败时等待页有「重试渲染」按钮；Agent 侧手动 `render.py --json` 拿到完整错误再修。
+- 渲染失败先读取 `work/render-result.json` 和 `work/render-error.log`；页面展示完整错误并保留上次成功预览。服务健康时用页面重试，不要另起第二个编译进程。确认服务已经停止后才手动 `render.py --json`。
+- Windows 接受 UTF-8（有/无 BOM）及带 BOM 的 UTF-16 JSON，推荐 UTF-8。保存采用同目录临时文件替换，避免写半截文件。
+- Typst 每条命令默认最多 30 秒，超时会终止并显示原因；必要时设置 `RESUME_BUILDER_TYPST_TIMEOUT`（最大 300 秒），不要靠无限重试掩盖字体或模板错误。
+- `generating` 且 JSON 仍是旧模板时，先完成当前选择的模板/语言适配；重试不会用旧模板绕过阶段检查。
 - 模板能力对账（语言模式 / 页数目标不符）会在选择与渲染两处被拦（409 / RenderError），换能力匹配的模板或改 meta。

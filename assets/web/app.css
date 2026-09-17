@@ -64,6 +64,11 @@ body {
   text-rendering: optimizeLegibility;
 }
 img, svg { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
+.render-notice { margin: 8px 20px; flex-shrink: 0; }
+.render-notice button { margin-left: 12px; }
+.render-notice pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow: auto; }
+.connection-error { position: fixed; bottom: 16px; left: 20px; right: 20px; z-index: 1000; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; cursor: pointer; color: inherit; background: none; border: none; padding: 0; }
 input, textarea, select { font: inherit; color: inherit; }

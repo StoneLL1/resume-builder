@@ -16,6 +16,7 @@ import json
 import os
 import re
 import tempfile
+from local_io import replace
 from typing import Any
 
 SCHEMA_VERSION = 1
@@ -183,13 +184,13 @@ def load_resume(path: str | os.PathLike[str]) -> dict:
     """读取并校验 resume.json。任何失败抛 ResumeModelError（含可展示信息）。"""
     path = os.fspath(path)
     try:
-        with open(path, "r", encoding="utf-8") as fh:
+        with open(path, "rb") as fh:  # json accepts UTF-8/UTF-16 BOM from Windows shells
             data = json.load(fh)
     except FileNotFoundError:
         raise ResumeModelError(f"找不到文件：{path}")
-    except json.JSONDecodeError as exc:
+    except (UnicodeError, json.JSONDecodeError) as exc:
         raise ResumeModelError(
-            f"resume.json 不是合法 JSON（第 {exc.lineno} 行第 {exc.colno} 列：{exc.msg}）。"
+            f"resume.json 不是合法 JSON：{exc}。请使用 UTF-8，或带 BOM 的 UTF-16。"
             "文件未被修改，请修正后再保存。"
         )
     errors = validate(data)
@@ -212,7 +213,7 @@ def save_resume(path: str | os.PathLike[str], data: dict) -> None:
             fh.write(payload)
             fh.flush()
             os.fsync(fh.fileno())
-        os.replace(tmp_path, path)  # 同目录内 rename，原子生效（后保存者覆盖前一版）
+        replace(tmp_path, path)  # 容忍 Windows 文件监视器/杀毒软件的短暂占用
     except BaseException:
         try:
             os.unlink(tmp_path)

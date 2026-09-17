@@ -8,6 +8,9 @@ runtime_home="${RESUME_BUILDER_HOME:-$HOME/Library/Application Support/resume-bu
 mirror="${RESUME_BUILDER_DOWNLOAD_MIRROR:-}"
 force=0
 check=0
+template=""
+all_fonts=0
+offline_dir="${RESUME_BUILDER_OFFLINE_DIR:-}"
 
 usage() {
   printf '%s\n' "Usage: bootstrap.sh [--runtime-home PATH] [--mirror PREFIX] [--force] [--check]"
@@ -19,6 +22,9 @@ while (($#)); do
     --mirror) mirror="$2"; shift 2 ;;
     --force) force=1; shift ;;
     --check) check=1; shift ;;
+    --template) template="$2"; shift 2 ;;
+    --all-fonts) all_fonts=1; shift ;;
+    --offline-dir) offline_dir="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) printf '[bootstrap] Unknown argument: %s\n' "$1" >&2; usage >&2; exit 2 ;;
   esac
@@ -70,10 +76,20 @@ download_python() {
     printf '%s\n' "$target"
     return
   fi
+  if [[ -n "$offline_dir" ]]; then
+    local source="$offline_dir/$filename"
+    if [[ ! -f "$source" ]] || [[ "$(shasum -a 256 "$source" | awk '{print $1}')" != "$expected" ]]; then
+      printf '[bootstrap] Missing or invalid offline artifact: %s (network disabled)\n' "$filename" >&2
+      exit 1
+    fi
+    [[ "$source" == "$target" ]] || cp "$source" "$target"
+    printf '%s\n' "$target"
+    return
+  fi
   while IFS= read -r candidate_url; do
     part="$runtime_home/downloads/.$filename.$$.part"
     printf '[bootstrap] Downloading Python: %s\n' "$candidate_url" >&2
-    if /usr/bin/curl --fail --location --retry 3 --connect-timeout 20 --output "$part" "$candidate_url"; then
+    if /usr/bin/curl --fail --location --retry 2 --connect-timeout 15 --max-time 180 --output "$part" "$candidate_url"; then
       actual="$(shasum -a 256 "$part" | awk '{print $1}')"
       if [[ "$actual" == "$expected" ]]; then
         mv -f "$part" "$target"
@@ -92,16 +108,16 @@ download_python() {
 }
 
 if [[ -z "$python_exe" ]]; then
-  if [[ $check -eq 1 ]]; then
-    printf '[bootstrap] Python 3.10+ not found; --check does not install anything.\n' >&2
-    exit 1
-  fi
   python_version="$(json_get 'python.version')"
   python_root="$runtime_home/python-$python_version-$arch_key"
   python_exe="$python_root/bin/python3"
   if [[ $force -eq 0 && -x "$python_exe" ]] && python_ok "$python_exe"; then
     printf '[bootstrap] Managed Python is ready: %s\n' "$python_exe"
   else
+    if [[ $check -eq 1 ]]; then
+      printf '[bootstrap] Python 3.10+ not found; --check does not install anything.\n' >&2
+      exit 1
+    fi
     archive="$(download_python | tail -n 1)"
     mkdir -p "$runtime_home"
     staging="$runtime_home/.python-staging-$$"
@@ -138,6 +154,9 @@ args=(
 [[ -n "$mirror" ]] && args+=(--mirror "$mirror")
 [[ $force -eq 1 ]] && args+=(--force)
 [[ $check -eq 1 ]] && args+=(--check)
+[[ -n "$template" ]] && args+=(--template "$template")
+[[ $all_fonts -eq 1 ]] && args+=(--all-fonts)
+[[ -n "$offline_dir" ]] && args+=(--offline-dir "$offline_dir")
 "$python_exe" "${args[@]}"
 
 export RESUME_BUILDER_HOME="$runtime_home"

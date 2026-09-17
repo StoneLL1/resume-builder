@@ -46,6 +46,11 @@
   </div>
 
   <!-- ═══ 主区 ═══ -->
+  <div id="renderNotice" class="render-notice banner banner-error" role="alert" hidden>
+    <span>本次排版未完成，已保留上次成功预览。请查看原因后重试。</span>
+    <button id="renderRetry" class="btn btn-secondary btn-sm" type="button">重试渲染</button>
+    <details><summary>查看错误详情</summary><pre id="renderErrorText"></pre></details>
+  </div>
   <div class="editor-main">
     <div class="canvas-wrap" id="canvasWrap" aria-label="简历预览，点击文字块可就地编辑">
       <div id="canvasEmpty" style="color:var(--muted);text-align:center;line-height:2">
@@ -94,6 +99,8 @@ let savedAt = null;           // 最近一次保存完成时间戳
 let pendingSave = false;      // PUT 已提交、等待 rendered/render_failed
 let busy = false;             // 保存请求在途
 let entryOpen = new Set();    // 结构面板中展开 bullets 的 entry id
+let lastRenderStamp = null;
+let lastResumeRevision = null;
 
 const PAGE_DISPLAY_W = 660;   // 画布显示宽（px）；热区坐标 = pt × scale
 
@@ -144,7 +151,7 @@ function fieldAccess(id) {
 function entryOf(id) {
   for (const s of resume.sections) {
     for (const e of s.entries) {
-      if (e.id === id || id.startsWith(e.id + '.') || id.startsWith(e.id + '-b')) return e;
+      if (e.id === id || id.startsWith(e.id + '.') || e.bullets.some(b => b.id === id)) return e;
     }
   }
   return null;
@@ -173,14 +180,18 @@ function refreshPageCount() {
 async function saveResume(mutator, { quiet = false } = {}) {
   if (busy) { toast('上一个保存还在进行中，请稍候'); throw new Error('busy'); }
   busy = true;
+  const before = JSON.parse(JSON.stringify(resume));
   try {
     mutator(resume);
     setStatus('saving', '保存中…');
-    await api('/api/resume', { method: 'PUT', body: resume });
     pendingSave = true;
+    await api('/api/resume', { method: 'PUT', body: resume });
     setStatus('rendering', '已保存，渲染中…');
     renderStructure();       // 面板立即反映结构变化
   } catch (e) {
+    resume = before;
+    pendingSave = false;
+    renderStructure();
     setStatus('idle', '保存失败');
     toast('保存失败：' + e.message, 5000);
     throw e;
@@ -195,10 +206,13 @@ async function onRenderDone(ok, data) {
   pendingSave = false;
   await refreshCanvas();
   if (ok) {
+    $('#renderNotice').hidden = true;
     setStatus('saved', '已保存');
   } else {
+    $('#renderNotice').hidden = false;
+    $('#renderErrorText').textContent = data.error || '未知错误，请回到对话查看 work/render-error.log。';
     setStatus('failed', '渲染失败');
-    toast('渲染失败：' + (data && data.error ? String(data.error).split('\n')[0] : '未知错误') + '（可点“导出”旁重试或回到对话修复）', 6000);
+    toast('渲染失败：' + (data && data.error ? String(data.error).split('\n')[0] : '未知错误') + '（查看页面错误详情，修复后重试）', 6000);
   }
   if (wasPending && ok) toast('已更新');
 }
@@ -233,7 +247,8 @@ async function refreshCanvas() {
     const img = document.createElement('img');
     img.className = 'svgpage';
     img.alt = '简历第 ' + p + ' 页';
-    img.src = `/api/preview/${p}?token=${encodeURIComponent(RB.token)}&v=${renderVersion}`;
+    img.src = `/api/preview/${p}?token=${encodeURIComponent(RB.token)}&v=${renderVersion}`
+      + (layoutMap.revision ? '&revision=' + encodeURIComponent(layoutMap.revision) : '');
     pageEl.appendChild(img);
 
     if (layoutMap.pages > 1) {
@@ -280,6 +295,7 @@ let editorEl = null;
 
 function closeInlineEditor() {
   if (!editorEl) return;
+  if (editorEl._outside) document.removeEventListener('mousedown', editorEl._outside);
   editorEl.remove();
   editorEl = null;
 }
@@ -323,7 +339,11 @@ function openInlineEditor(id, access, anchorEl) {
     const val = ta.value.replace(/\s+$/, '');
     const errEl = editorEl.querySelector('.ie-err');
     errEl.classList.add('hidden');
-    saveResume(r => access.set(val)).then(() => {
+    saveResume(() => {
+      const currentAccess = fieldAccess(id);
+      if (!currentAccess) throw new Error('该字段已被删除，请重新选择要编辑的内容。');
+      currentAccess.set(val);
+    }).then(() => {
       closeInlineEditor();
     }).catch(e => {
       errEl.textContent = e.message;
@@ -340,7 +360,8 @@ function openInlineEditor(id, access, anchorEl) {
     if (e.key === 'Escape') closeInlineEditor();
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) save();
   });
-  setTimeout(() => document.addEventListener('mousedown', outside));
+  const openedEditor = editorEl;
+  setTimeout(() => { if (editorEl === openedEditor) document.addEventListener('mousedown', outside); });
   function outside(e) {
     if (editorEl && !editorEl.contains(e.target) && !anchorEl.contains(e.target)) closeInlineEditor();
   }
@@ -420,7 +441,7 @@ $('#structureBody').addEventListener('click', e => {
     const sec = resume.sections.find(s => s.id === addEntry.dataset.addEntry);
     const id = nextId(sec.id + '-e');
     ensureOpen(id);
-    saveResume(() => sec.entries.push({ id, title: '新经历（待填写）', subtitle: '', date: '', location: '', bullets: [] }))
+    saveResume(() => sec.entries.push({ id, title: resume.meta.language_mode === 'en' ? 'New experience (edit me)' : '新经历（待填写）', subtitle: '', date: '', location: '', bullets: [] }))
       .then(() => selectEntryInPanel(id)).catch(() => {});
     return;
   }
@@ -440,7 +461,7 @@ $('#structureBody').addEventListener('click', e => {
     const entry = entryOf(addBullet.dataset.addBullet);
     const id = nextId(entry.id + '-b');
     ensureOpen(entry.id);
-    saveResume(() => entry.bullets.push({ id, text: '新要点（待填写）' }))
+    saveResume(() => entry.bullets.push({ id, text: resume.meta.language_mode === 'en' ? 'New bullet (edit me)' : '新要点（待填写）' }))
       .then(() => selectEntryInPanel(entry.id)).catch(() => {});
     return;
   }
@@ -612,7 +633,7 @@ exportMenu.addEventListener('click', e => {
   if (!item) return;
   closeMenu();
   item.disabled = true;
-  api('/api/export', { method: 'POST', body: {} })
+  api('/api/export', { method: 'POST', body: {}, timeoutMs: 135000 })
     .then(res => {
       toast('已导出：' + res.filename + '（' + res.pages + ' 页）' + (res.warning ? '\n⚠ ' + res.warning : ''), res.warning ? 6000 : 3200);
     })
@@ -630,6 +651,15 @@ $('#doneBtn').addEventListener('click', () => {
 $('#emptyRetry').addEventListener('click', () => {
   api('/api/render', { method: 'POST', body: {} }).then(() => toast('已重新排队渲染')).catch(e => toast(e.message));
 });
+$('#renderRetry').addEventListener('click', async () => {
+  const button = $('#renderRetry');
+  button.disabled = true;
+  try {
+    await api('/api/render', { method: 'POST', body: {} });
+    setStatus('rendering', '正在重试…');
+  } catch (e) { toast(e.message, 6000); }
+  finally { button.disabled = false; }
+});
 
 /* ═══════════ 结构面板折叠 ═══ */
 const structure = $('#structure'), railToggle = $('#railToggle');
@@ -643,34 +673,36 @@ railToggle.addEventListener('click', () => setStructure(structure.classList.cont
 $('#closeStructure').addEventListener('click', () => setStructure(false));
 
 /* ═══════════ 事件轮询：外部修改 / 阶段切换 / 渲染完成 ═══ */
-function handleEvent(ev, state) {
+async function handleEvent(ev, state) {
   if (ev === null) {
     /* 空 tick 兜底：基线竞态漏掉的阶段翻转由当前状态补上 */
     if (state && (state.stage === 'generating' || state.stage === 'gallery'
                   || state.stage === 'writing')) {
       location.replace(state.stage === 'generating' ? '/waiting' : '/gallery');
+      return;
+    }
+    if (!state || busy) return;
+    if (lastResumeRevision !== state.resume_revision) {
+      try {
+        resume = await api('/api/resume');
+        renderStructure();
+        renderTplThumbs();
+      } catch (e) {
+        $('#renderNotice').hidden = false;
+        $('#renderErrorText').textContent = e.message;
+        setStatus('failed', '内容读取失败');
+      }
+      lastResumeRevision = state.resume_revision;
+    }
+    if (state.rendering) { setStatus('rendering', '已保存，排版中…'); return; }
+    const result = state.render;
+    if (result && (result.finished_at !== lastRenderStamp || pendingSave)) {
+      await onRenderDone(result.ok, result);
+      lastRenderStamp = result.finished_at;
     }
     return;
   }
-  if (ev.type === 'stage') {
-    const stage = ev.data && ev.data.stage;
-    if (stage === 'generating') { location.replace('/waiting'); return; }
-    if (stage === 'gallery') { location.replace('/gallery'); return; }
-    return;
-  }
-  if (ev.type === 'resume_changed' && ev.data && ev.data.source === 'external') {
-    /* Agent 改了 resume.json：重读数据（就地编辑浮层里的草稿不受影响，
-       保存时写到最新数据上） */
-    api('/api/resume').then(data => {
-      resume = data;
-      renderStructure();
-      renderTplThumbs();
-      toast('Agent 已更新简历内容');
-    }).catch(() => {});
-    return;
-  }
-  if (ev.type === 'rendered') { onRenderDone(true, ev.data); return; }
-  if (ev.type === 'render_failed') { onRenderDone(false, ev.data); return; }
+  // Current state is authoritative; historic events can arrive out of order.
 }
 
 /* ═══════════ 启动 ═══ */

@@ -6,7 +6,7 @@
 
 ## 1. 事前准备（运行时与原版字体）
 
-服务与渲染只依赖 Python 3（标准库）和 typst 可执行文件。首次使用先检查：
+服务与渲染只依赖 Python 3（标准库）和 Typst。首次使用先检查基础运行时；默认不下载所有模板的字体。选定模板后，在阶段 C 按需安装。
 
 ```bash
 # Windows（检查；不带 -Check 则安装缺失项）
@@ -21,24 +21,25 @@ python scripts/bootstrap_runtime.py --check --json
 
 - 安装走国内镜像可设 `RESUME_BUILDER_DOWNLOAD_MIRROR`，下载固定版本并校验 SHA-256，全部装到用户级目录，不需要管理员权限。
 - typst 查找顺序：环境变量 `RESUME_BUILDER_TYPST` → 用户级缓存目录的 `bin/typst(.exe)`（bootstrap 安装位置，Windows 为 `%LOCALAPPDATA%\resume-builder\bin\`）→ 系统 PATH。
+- Windows 使用 `powershell -ExecutionPolicy Bypass -File scripts/run.ps1 serve "<项目目录>"`；等待事件用同一 launcher，将 `serve` 改为 `wait_for_event`。macOS 用 `bash scripts/run.sh serve "<项目目录>"`。launcher 从运行时记录读取实际解释器，不要求系统存在 `python` 命令。自定义缓存必须继续传同一个 `RESUME_BUILDER_HOME`（Windows 也支持 `-RuntimeHome`）。下文的 `python` 仅代表 bootstrap 确定的解释器绝对路径。
 - 重复运行 bootstrap 不会重复下载已就位的依赖。原版系统字体依赖见 `assets/runtime-NOTICES.md`；缺失时保持模板不变，先解决准确字体依赖。
 
 ## 2. 执行顺序（固定，勿颠倒）
 
 1. 告知用户："即将打开模板画廊，请选择一套模板，我会自动继续。"
-2. **后台**启动本地服务——它会打开浏览器进入画廊：
+2. **后台**启动本地服务——它会按当前阶段打开浏览器；同一项目已有服务时复用：
    ```bash
    python scripts/serve.py "<项目目录>"
    ```
    - 只监听 `127.0.0.1`；默认端口 8765，被占时自动顺延尝试；随机会话令牌已注入 URL。
    - serve 启动时读取现有 `work/session.json` 恢复会话（模板选择、换模板、编辑中都会正确接续）；没有则从 gallery 阶段新建。
    - 需要不自动开浏览器的场景（如远程）加 `--no-open`。
-3. **阻塞**等待用户选择（这一步必须在用户操作页面**之前**就位）：
+3. 等待用户选择。默认先读取尚未消费的最新动作，再等新事件；用户先点击也不会漏接。可短时等待后继续轮询，保持对话能响应：
    ```bash
-   python scripts/wait_for_event.py "<项目目录>"
+   python scripts/wait_for_event.py "<项目目录>" --timeout 60
    ```
    - 默认等待 `template_selected` / `template_change_requested` / `editing_done` 三类；只等选择可加 `--types template_selected`。
-   - **只等"新"事件**（以启动时刻为基线，不回放历史）。
+   - **默认使用持久游标** `work/agent-cursor.json`，返回最新未消费匹配事件并推进游标。超时不会丢事件，不要用 `--new-only` 做正常协作。
    - stdout 输出一行 JSON 事件对象（人读信息在 stderr）：`{"seq":n,"type":"template_selected","data":{"template_id":"..."}}`。
    - 退出码：0 = 等到事件；124 = 超时（默认 3600s，`--timeout` 调整，0 为无限）；1 = 错误。
 
@@ -57,9 +58,11 @@ python scripts/bootstrap_runtime.py --check --json
 ## 4. 恢复场景（skill 再次被调用）
 
 - 服务还在跑：直接执行 §2 第 3 步等待即可。
-- 服务已关、且用户此前已选过模板：`python scripts/wait_for_event.py "<项目目录>" --history` 立即返回最近一条未消费的匹配事件（注意核对 `type` 与 `data.template_id`），然后重启服务继续阶段 C。
+- 服务已关、且用户此前已选过模板：`python scripts/wait_for_event.py "<项目目录>" --history` 显式重放最近一条匹配事件（可能已接收，但 Agent 工作中断）（注意核对 `type` 与 `data.template_id`），核对 `session.json` 的当前选择和阶段后继续未完成工作；不要重复处理已完成的旧选择。服务已关闭时，先重启服务。
 
 ## 5. 拿到选择结果之后
+
+先用实际解释器运行 `scripts/bootstrap_runtime.py --template <模板ID> --check --json`；仅缺开放字体时去掉 `--check` 安装并校验一次。若缺 KaiTi、STKaiti 等系统字体，向用户说明依赖或请其重选，不能反复重试渲染。
 
 事件 `data.template_id` 是用户选定的模板 ID，`data.language_mode` 是目标内容语言；服务将后者保存在 `session.selected_language`。Agent 完成对应语言的内容精修后，一起写入 `resume.json.meta.template_id` / `language_mode`。旧事件缺少语言字段时沿用现有内容语言并检查模板能力。读取
 `references/rendering-stage.md`（连同 `references/data-contract.md`）继续阶段 C。

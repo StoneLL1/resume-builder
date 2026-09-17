@@ -183,7 +183,7 @@ The editor targets desktop browsers and one- to two-page monolingual Chinese or 
 <details>
 <summary><strong>Where is data stored? Is the entire workflow offline?</strong></summary>
 
-Resume content and session state are stored locally. The web service listens only on `127.0.0.1`. Initial setup downloads runtimes and open fonts; templates and Typst packages are bundled. Data handling in the Agent conversation depends on your Agent and model provider. A local web interface does not make the entire AI workflow offline.
+Resume content and session state are stored locally. The web service listens only on `127.0.0.1`. Default setup prepares only runtimes; open fonts are installed for the selected template. Templates and Typst packages are bundled. For networks that cannot reach the download sources, follow [INSTALL.md](INSTALL.md) to prepare an offline bundle on another machine and transfer it. Data handling in the Agent conversation depends on your Agent and model provider. A local web interface does not make the entire AI workflow offline.
 
 </details>
 

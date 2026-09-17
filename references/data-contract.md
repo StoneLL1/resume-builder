@@ -122,7 +122,7 @@ label/value、name）支持且仅支持：
 
 ## 8. layout-map.json 契约（渲染产物，只读）
 
-`scripts/render.py` 渲染后生成 `work/build/layout-map.json`：
+`scripts/render.py` 渲染后生成 `work/build/<revision>/layout-map.json`：
 
 ```jsonc
 {
@@ -152,7 +152,7 @@ label/value、name）支持且仅支持：
   （`\` `"` `'` `#` `$` `_` `[` `]` `(` `)` `@` `<` `>` `~` `+` `-` `/`
   `=` `*` 及反引号）。用户数据只能产生文字，不可能注入 Typst 代码或标记；
   链接 URL 走 Typst 字符串字面量转义。
-- **生成物**：`work/build/resume-data.typ` 由 `resume_data_literal()` 从
+- **生成物**：`work/build/<revision>/resume-data.typ` 由 `resume_data_literal()` 从
   resume.json 自动生成，禁止手改。
 - **原子保存**（`save_resume`）：先校验 → 写同目录临时文件 → fsync →
   `os.replace`。中途断电/崩溃要么旧文件完好、要么新文件完整，不会出现

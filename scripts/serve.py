@@ -38,6 +38,10 @@ import threading
 import time
 import urllib.parse
 import webbrowser
+import traceback
+import subprocess
+from pathlib import Path
+from local_io import file_lock, write_json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -95,14 +99,15 @@ class ServerCore:
         self.rendering = False
         self.last_render: dict | None = None
         self._render_q: "queue.Queue[str]" = queue.Queue(maxsize=1)
-        self._render_lock = threading.Lock()
+        self._render_lock = threading.RLock()
         self._resume_io_lock = threading.Lock()  # 消除 PUT 保存与监听线程的竞窗
         self._resume_stat = self._stat(resume_model_path(self.project_dir))
         self._session_stat = self._stat(session_mod.session_path(self.project_dir))
-        self._pending_own_write = False
         self.session = session_mod.ensure_session(self.project_dir)
         self._stop = threading.Event()
         self._threads: list[threading.Thread] = []
+        self._font_inventory = None
+        self._font_inventory_at = 0.0
 
     # ── 基础 ──
 
@@ -115,7 +120,7 @@ class ServerCore:
             return None
 
     def build_dir(self) -> str:
-        return os.path.join(self.project_dir, "work", "build")
+        return render.current_build_dir(self.project_dir)
 
     def start_background(self) -> None:
         """启动后台线程：渲染队列 + 文件监听。幂等。"""
@@ -126,6 +131,8 @@ class ServerCore:
         t1.start()
         t2.start()
         self._threads = [t1, t2]
+        if self.session.get("stage") in ("editor", "done", "generating") and os.path.isfile(resume_model_path(self.project_dir)):
+            self.queue_render("startup")
 
     def stop_background(self) -> None:
         self._stop.set()
@@ -144,23 +151,28 @@ class ServerCore:
     def state_summary(self) -> dict:
         session = self.session
         render_info = None
-        result_path = os.path.join(self.build_dir(), "render-result.json")
-        if self.last_render is not None:
-            render_info = self.last_render
-        elif os.path.isfile(result_path):
+        result_path = os.path.join(self.project_dir, "work", "render-result.json")
+        if not os.path.isfile(result_path):
+            result_path = os.path.join(self.build_dir(), "render-result.json")
+        if os.path.isfile(result_path):
             try:
                 with open(result_path, "r", encoding="utf-8") as fh:
                     render_info = json.load(fh)
             except (json.JSONDecodeError, OSError):
                 render_info = None
+        if self.last_render is not None and (
+                render_info is None or self.last_render.get("finished_at", 0) > render_info.get("finished_at", 0)):
+            render_info = self.last_render
         return {
+            "project_dir": self.project_dir,
             "stage": session.get("stage"),
             "note": session.get("note"),
             "error": session.get("error"),
             "template_id": session.get("template_id"),
             "selected_template": session.get("selected_template"),
-            "rendering": self.rendering,
+            "rendering": self.rendering or not self._render_q.empty(),
             "render": render_info,
+            "resume_revision": str(self._stat(resume_model_path(self.project_dir))),
             "updated_at": session.get("updated_at"),
         }
 
@@ -175,7 +187,7 @@ class ServerCore:
             return False
 
     def _render_worker(self) -> None:
-        while True:
+        while not self._stop.is_set():
             reason = self._render_q.get()
             if reason == "__exit__":
                 return
@@ -185,18 +197,33 @@ class ServerCore:
                 # 渲染线程绝不允许死掉：死了以后队列静默堆积、页面永远
                 # 「渲染中」。可预期错误在 _render_one 里已按 render_failed
                 # 落事件，这里只拦漏网异常，同样落事件后继续服务。
-                try:
-                    session_mod.append_event(self.project_dir, "render_failed", {
-                        "reason": reason, "ok": False,
-                        "error": f"渲染线程内部错误：{exc!r}"[:2000],
-                    })
-                except OSError:
-                    pass  # 事件文件也写不进去时只能放弃记录
+                self._record_failure(reason, exc)
+
+    def _record_failure(self, reason: str, exc: Exception) -> None:
+        message = str(exc) or type(exc).__name__
+        self.last_render = {"ok": False, "error": message, "finished_at": time.time_ns()}
+        self.rendering = False
+        try:
+            write_json(Path(self.project_dir) / "work" / "render-result.json", self.last_render)
+            with open(Path(self.project_dir) / "work" / "render-error.log", "w", encoding="utf-8") as fh:
+                fh.write(traceback.format_exc())
+            session_mod.append_event(self.project_dir, "render_failed", {"reason": reason, **self.last_render})
+            self._session_update(error={"message": message, "at": time.strftime("%Y-%m-%dT%H:%M:%S")})
+        except OSError:
+            pass  # state_summary still exposes the in-memory failure
+
+    def _check_selected_template(self):
+        if self.session.get("stage") == "generating" and self.session.get("selected_template"):
+            meta = resume_model.load_resume(resume_model_path(self.project_dir))["meta"]
+            if (meta["template_id"] != self.session["selected_template"] or
+                    meta["language_mode"] != self.session.get("selected_language", meta["language_mode"])):
+                raise render.RenderError("所选模板尚未写入简历。请回到对话让 Agent 完成模板与语言适配，再重试。")
 
     def _render_one(self, reason: str) -> None:
         with self._render_lock:
             self.rendering = True
             try:
+                self._check_selected_template()
                 result = render.render_project(
                     self.project_dir, typst_path=self.typst_path,
                     templates_dir=self.templates_dir)
@@ -218,14 +245,8 @@ class ServerCore:
                     cleanup["note"] = "重试渲染成功，已进入编辑器"
                 if cleanup:
                     self._session_update(**cleanup)
-            except (render.RenderError, resume_model.ResumeModelError) as exc:
-                self.last_render = None
-                message = str(exc)
-                session_mod.append_event(self.project_dir, "render_failed", {
-                    "reason": reason, "ok": False, "error": message[:2000],
-                })
-                self._session_update(error={"message": message[:2000],
-                                            "at": time.strftime("%Y-%m-%dT%H:%M:%S")})
+            except Exception as exc:
+                self._record_failure(reason, exc)
             finally:
                 self.rendering = False
 
@@ -234,11 +255,15 @@ class ServerCore:
         with self._render_lock:
             self.rendering = True
             try:
+                self._check_selected_template()
                 result = render.render_project(
                     self.project_dir, typst_path=self.typst_path,
                     templates_dir=self.templates_dir)
                 self.last_render = result
                 return result
+            except Exception as exc:
+                self._record_failure("export", exc)
+                raise
             finally:
                 self.rendering = False
 
@@ -254,10 +279,11 @@ class ServerCore:
                     stat = self._stat(resume_model_path(self.project_dir))
                     if stat != self._resume_stat:
                         self._resume_stat = stat
-                        if not self._consume_own_write():
-                            session_mod.append_event(self.project_dir, "resume_changed",
-                                                     {"source": "external"})
-                            self.queue_render("external-resume-change")
+                        self.queue_render("external-resume-change")
+                        try:
+                            session_mod.append_event(self.project_dir, "resume_changed", {"source": "external"})
+                        except OSError:
+                            pass
                 finally:
                     self._resume_io_lock.release()
             # session.json 外部变化（Agent set-stage）→ 重载内存副本
@@ -266,21 +292,15 @@ class ServerCore:
                 self._session_stat = stat
                 try:
                     data = session_mod.load_session(self.project_dir)
-                except session_mod.SessionError:
+                except (session_mod.SessionError, OSError):
                     data = None
+                    self._session_stat = None  # retry transient Windows read failures
                 if data is not None:
                     self.session = data
 
     def note_own_resume_write(self) -> None:
-        """PUT /api/resume 保存成功后调用：标记下一次 mtime 变化是自己造成的。"""
+        """Called under the write lock; this stat is the entire deduplication token."""
         self._resume_stat = self._stat(resume_model_path(self.project_dir))
-        self._pending_own_write = True
-
-    def _consume_own_write(self) -> bool:
-        if self._pending_own_write:
-            self._pending_own_write = False
-            return True
-        return False
 
     def _session_update(self, **changes) -> None:
         """服务侧修改会话（与 Agent 的 CLI 写盘同一原子语义，后保存者生效）。
@@ -290,7 +310,7 @@ class ServerCore:
         涉及阶段切换时补一条 stage 事件，保证 events.jsonl 是完整历史
         （浏览器轮询 /api/events 即可感知，无需另设推送通道）。
         """
-        data = dict(self.session) if isinstance(self.session, dict) else {
+        data = session_mod.load_session(self.project_dir) or {
             "schema_version": 1, "stage": "writing",
         }
         stage_changed = "stage" in changes and changes["stage"] != data.get("stage")
@@ -305,6 +325,18 @@ class ServerCore:
     # ── 业务动作 ──
 
     def list_templates(self, include_internal: bool = False) -> dict:
+        if time.monotonic() - self._font_inventory_at > 15:
+            self._font_inventory_at = time.monotonic()
+            try:
+                typst = render.find_typst(self.typst_path)
+                args = [typst, "fonts"]
+                font_dir = Path(render.runtime_home()) / "fonts"
+                if font_dir.is_dir():
+                    args += ["--font-path", str(font_dir)]
+                proc = subprocess.run(args, capture_output=True, encoding="utf-8", errors="replace", timeout=5)
+                self._font_inventory = {s.strip().casefold() for s in proc.stdout.splitlines()} if proc.returncode == 0 else None
+            except (OSError, subprocess.TimeoutExpired, render.RenderError):
+                self._font_inventory = None
         listing = render.list_templates(self.templates_dir)
         templates = [t for t in listing["templates"]
                      if include_internal or not t.get("internal")]
@@ -324,6 +356,8 @@ class ServerCore:
             return "zh"
 
     def _template_card(self, manifest: dict) -> dict:
+        required = {f for combo in manifest.get("fonts", {}).values() for f in combo["latin"] + combo["cjk"]}
+        missing = sorted(f for f in required if self._font_inventory is not None and f.casefold() not in self._font_inventory)
         return {
             "id": manifest["id"],
             "name": manifest["name"],
@@ -339,6 +373,8 @@ class ServerCore:
             "license": manifest.get("license", {}).get("name"),
             "upstream": manifest.get("upstream"),
             "preview_url": f"/api/template-preview/{manifest['id']}",
+            "missing_fonts": missing,
+            "font_status": "unknown" if self._font_inventory is None else "missing" if missing else "ready",
         }
 
     def select_template(self, template_id: str, language_mode: str | None = None) -> dict:
@@ -400,11 +436,10 @@ class ServerCore:
         """导出正式 PDF：强制重渲染 → 复制为规范文件名 → 阶段 done。"""
         try:
             result = self.render_now()
-            data = resume_model.load_resume(resume_model_path(self.project_dir))
         except (render.RenderError, resume_model.ResumeModelError) as exc:
             raise ServeError(500, str(exc))
-        filename = resume_model.export_filename(data)
-        src = os.path.join(self.build_dir(), "resume.pdf")
+        filename = result["export_filename"]
+        src = os.path.join(result["build_dir"], "resume.pdf")
         if not os.path.isfile(src):
             raise ServeError(500, "渲染完成但没有找到 resume.pdf，导出中止。")
         shutil.copy2(src, os.path.join(self.project_dir, filename))
@@ -451,8 +486,8 @@ class ServerCore:
         with open(layout_path, "r", encoding="utf-8") as fh:
             return json.load(fh)
 
-    def read_page_svg(self, page: int) -> bytes:
-        path = os.path.join(self.build_dir(), f"page-{page}.svg")
+    def read_page_svg(self, page: int, revision: str | None = None) -> bytes:
+        path = os.path.join(render.current_build_dir(self.project_dir, revision), f"page-{page}.svg")
         if page < 1 or page > 99 or not os.path.isfile(path):
             raise ServeError(404, f"预览页不存在：page-{page}.svg（先渲染，或页数已变化）。")
         with open(path, "rb") as fh:
@@ -517,8 +552,10 @@ class _Handler(BaseHTTPRequestHandler):
             query = urllib.parse.parse_qs(parsed.query)
             self._route(method, path, query)
         except ServeError as exc:
+            self.close_connection = True  # rejected POST may leave an unread body
             self._send_json(exc.status, {"error": str(exc)})
         except (render.RenderError, resume_model.ResumeModelError) as exc:
+            self.close_connection = True
             self._send_json(500, {"error": str(exc)})
         except BrokenPipeError:
             pass
@@ -610,7 +647,7 @@ class _Handler(BaseHTTPRequestHandler):
             m = re.match(r"^/api/preview/(\d+)$", path)
             if not m:
                 raise ServeError(400, "预览路径应为 /api/preview/<页码>。")
-            self._send_bytes(self.core.read_page_svg(int(m.group(1))),
+            self._send_bytes(self.core.read_page_svg(int(m.group(1)), query.get("revision", [None])[0]),
                              "image/svg+xml", no_store=True)
 
         elif path == "/api/layout-map" and method == "GET":
@@ -670,14 +707,17 @@ class _Handler(BaseHTTPRequestHandler):
         raise ServeError(403, f"Origin 不被允许：{origin!r}。")
 
     def _read_json_body(self) -> dict:
-        length = int(self.headers.get("Content-Length") or 0)
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            raise ServeError(400, "Content-Length 无效。")
         if length <= 0:
             raise ServeError(400, "请求体不能为空（需要 JSON）。")
         if length > MAX_BODY_BYTES:
             raise ServeError(413, f"请求体过大（>{MAX_BODY_BYTES // (1024 * 1024)}MB）。")
         raw = self.rfile.read(length)
         try:
-            data = json.loads(raw.decode("utf-8"))
+            data = json.loads(raw.decode("utf-8-sig"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise ServeError(400, f"请求体不是合法 JSON：{exc}。")
         if not isinstance(data, dict):
@@ -709,6 +749,13 @@ class _HTTPD(ThreadingHTTPServer):
         self.core = core
         super().__init__(addr, handler)
 
+    def server_close(self):
+        super().server_close()
+        lock = getattr(self, "project_lock", None)
+        if lock:
+            self.project_lock = None
+            lock.__exit__(None, None, None)
+
 
 def create_server(project_dir: str, port: int = 8765, templates_dir: str | None = None,
                   typst_path: str | None = None, token: str | None = None):
@@ -716,8 +763,17 @@ def create_server(project_dir: str, port: int = 8765, templates_dir: str | None 
 
     返回 (httpd, core)。调用方自行 serve_forever()（测试用线程驱动）。
     """
-    core = ServerCore(project_dir, templates_dir=templates_dir,
+    lock = file_lock(Path(project_dir).resolve() / "work" / "server.lock", timeout=0)
+    try:
+        lock.__enter__()
+    except TimeoutError as exc:
+        raise ServeError(409, "此项目的本地服务已经运行，请复用 work/server.json 中的地址。") from exc
+    try:
+        core = ServerCore(project_dir, templates_dir=templates_dir,
                       typst_path=typst_path, token=token)
+    except Exception:
+        lock.__exit__(None, None, None)
+        raise
     httpd = None
     last_error: OSError | None = None
     for candidate in [port + i for i in range(11)] + [0]:
@@ -727,13 +783,21 @@ def create_server(project_dir: str, port: int = 8765, templates_dir: str | None 
         except OSError as exc:
             last_error = exc
     if httpd is None:
+        lock.__exit__(None, None, None)
         raise RuntimeError(f"无法绑定本地端口（尝试 {port}..{port + 10} 与随机端口）：{last_error}")
     core.port = httpd.server_address[1]
+    httpd.project_lock = lock
+    write_json(Path(core.project_dir) / "work" / "server.json",
+               {"pid": os.getpid(), "port": core.port, "token": core.token,
+                "url": f"http://127.0.0.1:{core.port}/?token={core.token}"})
     core.start_background()
     return httpd, core
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace", line_buffering=True)
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("project_dir", help="项目目录（内含 resume.json 与 work/）")
     parser.add_argument("--port", type=int,
@@ -745,20 +809,44 @@ def main() -> int:
     parser.add_argument("--no-open", action="store_true", help="不自动打开浏览器")
     args = parser.parse_args()
 
-    httpd, core = create_server(args.project_dir, port=args.port,
+    try:
+        httpd, core = create_server(args.project_dir, port=args.port,
                                 templates_dir=args.templates,
                                 typst_path=args.typst, token=args.token)
+    except ServeError as exc:
+        info_path = Path(args.project_dir) / "work" / "server.json"
+        try:
+            info = json.loads(info_path.read_text(encoding="utf-8-sig"))
+            connection = http.client.HTTPConnection("127.0.0.1", info["port"], timeout=3)
+            try:
+                connection.request("GET", "/api/state", headers={"X-Resume-Token": info["token"]})
+                response = connection.getresponse()
+                state = json.loads(response.read())
+                if response.status != 200 or state.get("project_dir") != os.path.abspath(args.project_dir):
+                    raise ValueError("项目不匹配")
+            finally:
+                connection.close()
+            print(f"[serve] 复用已运行的服务：{info['url']}")
+            if not args.no_open:
+                webbrowser.open(info["url"])
+            return 0
+        except (OSError, ValueError, KeyError, http.client.HTTPException):
+            print(f"[serve] {exc}", file=sys.stderr)
+            return 1
     base = f"http://127.0.0.1:{core.port}"
     print(f"[serve] Resume Builder 本地服务已启动（仅 127.0.0.1）")
     print(f"[serve] 项目：{core.project_dir}")
     print(f"[serve] 状态页：{base}/status?token={core.token}")
-    print(f"[serve] 画廊：  {base}/gallery?token={core.token}")
+    print(f"[serve] 打开：  {base}/?token={core.token}")
     print(f"[serve] Agent 等待事件：python scripts/wait_for_event.py \"{args.project_dir}\"")
     if not args.no_open:
-        try:
-            webbrowser.open(f"{base}/gallery?token={core.token}")
-        except OSError:
-            pass
+        def open_browser():
+            try:
+                if not webbrowser.open(f"{base}/?token={core.token}"):
+                    print("[serve] 浏览器未自动打开，请打开上方完整地址。")
+            except OSError as exc:
+                print(f"[serve] 浏览器未自动打开：{exc}。请打开上方完整地址。")
+        threading.Timer(.2, open_browser).start()
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

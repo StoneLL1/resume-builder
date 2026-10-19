@@ -14,7 +14,7 @@
 <p align="center"><a href="#quick-start">Quick Start</a> &nbsp;·&nbsp; <a href="#whats-new">What's New</a> &nbsp;·&nbsp; <a href="#screenshots">Gallery</a> &nbsp;·&nbsp; <a href="#docs">Docs</a></p>
 
 <p align="center">
-  <img src="cover.png" width="800" alt="resume-builder — turn your chaos into career">
+  <img src="cover.png" width="800" alt="resume-builder — turn your experience into a professional resume">
 </p>
 
 **resume-builder is an Agent Skill that takes a resume from source material to an exportable PDF.** Bring an existing resume, a target role, or scattered notes. The Agent asks follow-up questions, verifies facts, drafts the content, and guides you through template selection and browser editing.
